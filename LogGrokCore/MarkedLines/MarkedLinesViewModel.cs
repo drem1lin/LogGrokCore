@@ -22,7 +22,14 @@ namespace LogGrokCore.MarkedLines
         public DelegateCommand ItemActivatedCommand { get; }
 
         public bool HaveMarkedLines => _markedLines.Count != 0;
-        
+
+        // The shared AvalonDock LayoutItem style (intended for document panes) binds
+        // Model.Content.Title / .IsCurrentDocument; expose them here so those bindings
+        // resolve for the Marked Lines anchorable instead of logging path errors.
+        public string Title => "Marked lines";
+
+        public bool IsCurrentDocument => false;
+
         public IEnumerable? SelectedItems
         {
             get;

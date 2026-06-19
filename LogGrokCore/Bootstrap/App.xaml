@@ -10,6 +10,17 @@
                 <ResourceDictionary Source="pack://application:,,,/LogGrokCore;component/Styles/AvalonDockThemeFix.xaml" />
             </ResourceDictionary.MergedDictionaries>
             <FontFamily x:Key="JetBrainsMono">pack://application:,,,/LogGrokCore;component/Fonts/#JetBrains Mono</FontFamily>
+
+            <!--
+                Set content alignment explicitly on every MenuItem. The default item-container
+                style inherits these via {RelativeSource FindAncestor, ItemsControl}, which fails
+                for items hosted in submenu popups (DataItem=null) and spams "Cannot find source
+                for binding ... HorizontalContentAlignment/VerticalContentAlignment" trace errors.
+            -->
+            <Style TargetType="{x:Type MenuItem}" BasedOn="{StaticResource MahApps.Styles.MenuItem}">
+                <Setter Property="HorizontalContentAlignment" Value="Left" />
+                <Setter Property="VerticalContentAlignment" Value="Center" />
+            </Style>
         </ResourceDictionary>
     </Application.Resources>
 </Application>
