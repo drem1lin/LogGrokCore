@@ -40,7 +40,8 @@
     <PackageReference Include="Dirkster.AvalonDock" Version="4.70.3" />
     <PackageReference Include="Dirkster.AvalonDock.Themes.Metro" Version="4.70.3" />
     <PackageReference Include="GitInfo" Version="2.2.0" />
-    <PackageReference Include="MahApps.Metro" Version="2.4.9" />
+    <PackageReference Include="ControlzEx" Version="5.0.2" />
+    <PackageReference Include="MahApps.Metro" Version="2.4.11" />
     <PackageReference Include="MahApps.Metro.IconPacks.Material" Version="4.11.0" />
     <PackageReference Include="Microsoft.Extensions.Configuration" Version="9.0.0" />
     <PackageReference Include="Microsoft.Extensions.Configuration.Binder" Version="9.0.0" />
