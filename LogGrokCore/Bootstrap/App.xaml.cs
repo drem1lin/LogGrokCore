@@ -60,8 +60,6 @@ namespace LogGrokCore.Bootstrap
         {
             base.OnStartup(e);
 
-            LogGrokCore.Appearance.ThemeService.Apply(ApplicationSettings.Instance().Appearance.Theme);
-
             var mainWindow = _container.Resolve<MainWindow>();
             mainWindow.Show();
             

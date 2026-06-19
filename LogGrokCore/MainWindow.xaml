@@ -5,7 +5,6 @@
                      xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
                      xmlns:localControls="clr-namespace:LogGrokCore.Controls"
                      xmlns:local="clr-namespace:LogGrokCore"
-                     xmlns:appearance="clr-namespace:LogGrokCore.Appearance"
                      xmlns:mahapps="http://metro.mahapps.com/winfx/xaml/controls"
                      xmlns:th="clr-namespace:AvalonDock.Themes;assembly=AvalonDock.Themes.Metro"
                      xmlns:iconPacks="http://metro.mahapps.com/winfx/xaml/iconpacks"
@@ -47,24 +46,6 @@
                         </DataTemplate>
                     </MenuItem.HeaderTemplate>
                     <MenuItem Command="{Binding OpenFileCommand}" Header="Open" />
-                    <Separator />
-                    <MenuItem Header="Theme">
-                        <MenuItem Header="Auto (system)"
-                                  IsCheckable="True"
-                                  IsChecked="{Binding IsThemeAuto, Mode=OneWay}"
-                                  Command="{Binding SetThemeCommand}"
-                                  CommandParameter="{x:Static appearance:ThemeMode.Auto}" />
-                        <MenuItem Header="Light"
-                                  IsCheckable="True"
-                                  IsChecked="{Binding IsThemeLight, Mode=OneWay}"
-                                  Command="{Binding SetThemeCommand}"
-                                  CommandParameter="{x:Static appearance:ThemeMode.Light}" />
-                        <MenuItem Header="Dark"
-                                  IsCheckable="True"
-                                  IsChecked="{Binding IsThemeDark, Mode=OneWay}"
-                                  Command="{Binding SetThemeCommand}"
-                                  CommandParameter="{x:Static appearance:ThemeMode.Dark}" />
-                    </MenuItem>
                     <Separator />
                     <MenuItem Header="Debug logging &amp; crash dumps"
                               IsCheckable="True"

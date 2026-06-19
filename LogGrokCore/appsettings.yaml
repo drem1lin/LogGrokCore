@@ -4,10 +4,6 @@ Settings:
     EnableCrashDumps: false
     MaxDumpsCount: 10
 
-  Appearance:
-    # Theme: Auto (follow Windows) | Light | Dark
-    Theme: Auto
-
   ColorSettings:
     # Find list of supported values for Color here https://docs.microsoft.com/ru-ru/dotnet/api/system.drawing.color?view=net-6.0
     # or use "#AARRGGBB" notation

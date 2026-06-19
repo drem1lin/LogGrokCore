@@ -19,8 +19,6 @@ namespace LogGrokCore
 
         public DebugSettings DebugSettings { get; set; } = new();
 
-        public Appearance.AppearanceSettings Appearance { get; set; } = new();
-
         public ColorSettings ColorSettings { get; private set; } = new();
 
         public ViewSettings ViewSettings { get; private set; } = new();
@@ -81,45 +79,6 @@ namespace LogGrokCore
             catch (Exception ex)
             {
                 Trace.TraceWarning($"Failed to persist EnableCrashDumps: {ex.Message}");
-            }
-        }
-
-        /// <summary>
-        /// Updates the in-memory theme and persists it back to appsettings.yaml with a
-        /// targeted single-line replace. Best-effort: failures are logged, not thrown.
-        /// </summary>
-        public static void SetThemeMode(Appearance.ThemeMode mode)
-        {
-            Instance().Appearance.Theme = mode;
-            ReplaceSettingLine(@"^(\s*Theme\s*:\s*)(?:Auto|Light|Dark)\s*$", mode.ToString());
-        }
-
-        private static void ReplaceSettingLine(string lineRegex, string newValue)
-        {
-            try
-            {
-                var path = SettingsFileName;
-                if (!File.Exists(path))
-                    return;
-
-                var lines = File.ReadAllLines(path);
-                var regex = new Regex(lineRegex, RegexOptions.IgnoreCase);
-                for (var i = 0; i < lines.Length; i++)
-                {
-                    var match = regex.Match(lines[i]);
-                    if (!match.Success)
-                        continue;
-
-                    lines[i] = match.Groups[1].Value + newValue;
-                    File.WriteAllLines(path, lines);
-                    return;
-                }
-
-                Trace.TraceWarning($"Setting line not found in appsettings.yaml for pattern: {lineRegex}");
-            }
-            catch (Exception ex)
-            {
-                Trace.TraceWarning($"Failed to persist setting: {ex.Message}");
             }
         }
 

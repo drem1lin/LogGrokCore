@@ -7,8 +7,6 @@ using System.IO;
 using System.Reflection.Metadata;
 using System.Windows;
 using System.Windows.Input;
-using LogGrokCore.Appearance;
-using ThemeMode = LogGrokCore.Appearance.ThemeMode;
 using LogGrokCore.AvalonDockExtensions;
 using LogGrokCore.Data;
 using LogGrokCore.Diagnostics;
@@ -24,7 +22,6 @@ namespace LogGrokCore
         private readonly ApplicationSettings _applicationSettings;
         private readonly SearchAutocompleteCache _searchAutocompleteCache;
         private bool _isDebugLoggingEnabled;
-        private ThemeMode _themeMode;
 
         public ObservableCollection<DocumentViewModel> Documents { get; }
 
@@ -57,9 +54,6 @@ namespace LogGrokCore
             // Reflect the persisted state and apply verbose logging if it was left enabled.
             _isDebugLoggingEnabled = _applicationSettings.DebugSettings.EnableCrashDumps;
             DebugLogging.SetVerbose(_isDebugLoggingEnabled);
-
-            _themeMode = _applicationSettings.Appearance.Theme;
-            SetThemeCommand = DelegateCommand.Create((ThemeMode mode) => SetTheme(mode));
 
             MarkedLinesViewModel.NavigationRequested += (document, index) =>
             {
@@ -140,26 +134,6 @@ namespace LogGrokCore
                 // Re-raise either way: on success to confirm, on failure to revert the menu check.
                 InvokePropertyChanged();
             }
-        }
-
-        public ICommand SetThemeCommand { get; private set; } = null!;
-
-        public bool IsThemeAuto => _themeMode == ThemeMode.Auto;
-        public bool IsThemeLight => _themeMode == ThemeMode.Light;
-        public bool IsThemeDark => _themeMode == ThemeMode.Dark;
-
-        private void SetTheme(ThemeMode mode)
-        {
-            if (_themeMode == mode)
-                return;
-
-            _themeMode = mode;
-            ThemeService.Apply(mode);
-            ApplicationSettings.SetThemeMode(mode);
-
-            InvokePropertyChanged(nameof(IsThemeAuto));
-            InvokePropertyChanged(nameof(IsThemeLight));
-            InvokePropertyChanged(nameof(IsThemeDark));
         }
 
         private bool TryApplyDebugLogging(bool enable)
