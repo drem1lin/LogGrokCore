@@ -60,8 +60,8 @@
                             textRender:ClippingRectProviderBehavior.ClippingRectProvider="{Binding RelativeSource={RelativeSource Self}}"
                             CurrentPosition="{Binding CurrentItemIndex}" 
                             textRender:TextView.HighlightRegex="{Binding HighlightRegex}"
-                            Tag="{Binding 
-                                RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type listControls:ListView}}}">
+                            Tag="{Binding Path=(listControls:ListViewOwner.Owner),
+                                RelativeSource={RelativeSource Self}}">
                         </virtualizingStackPanel:VirtualizingStackPanel>
                     </ItemsPanelTemplate>
                 </listControls:ListView.ItemsPanel>

@@ -10,6 +10,10 @@ namespace LogGrokCore.Controls.ListControls
     {
         protected BaseListView()
         {
+            // Publish ourselves as the inherited owner so descendant cells/panels can
+            // reach this ListView without a (transiently failing) FindAncestor binding.
+            ListViewOwner.SetOwner(this, this);
+
             CommandBindings.Add(new CommandBinding(RoutedCommands.CopyToClipboard,
                 (_, args) =>
                 {
