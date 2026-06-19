@@ -50,9 +50,8 @@
     <PackageReference Include="NLog" Version="5.0.5" />
     <PackageReference Include="NLog.Extensions.Logging" Version="5.1.0" />
     <PackageReference Include="Splat.DryIoc" Version="14.4.1" />
-    <PackageReference Include="System.Text.Encoding.CodePages" Version="6.0.0" />
     <PackageReference Include="TextCopy" Version="6.1.0" />
-    <PackageReference Include="WPFTextBoxAutoComplete" Version="1.0.5" />
+    <PackageReference Include="WPFTextBoxAutoComplete" Version="1.0.5" NoWarn="NU1701" />
   </ItemGroup>
 
 
