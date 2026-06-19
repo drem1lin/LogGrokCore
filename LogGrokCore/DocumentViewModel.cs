@@ -3,6 +3,7 @@ using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Windows.Input;
 using LogGrokCore.Colors;
 using LogGrokCore.Controls;
@@ -11,13 +12,14 @@ using LogGrokCore.Search;
 
 namespace LogGrokCore
 {
-    public class DocumentViewModel : ViewModelBase
+    public class DocumentViewModel : ViewModelBase, IDisposable
     {
         private readonly Selection _markedLines;
         private bool _isCurrentDocument;
         private readonly LineProvider _lineProvider;
         private readonly TransformationPerformer _transformationPerformer;
         private Stream _fileHolder;
+        private bool _disposed;
 
         public DocumentViewModel(
             LineProvider lineProvider,
@@ -38,13 +40,13 @@ namespace LogGrokCore
             SearchViewModel = searchViewModel;
             ColorSettings = colorSettings;
             
-            SearchViewModel.CurrentLineChanged += lineNumber => NavigateTo(lineNumber);
-            SearchViewModel.CurrentSearchChanged += regex => LogViewModel.HighlightRegex = regex;
+            SearchViewModel.CurrentLineChanged += OnCurrentLineChanged;
+            SearchViewModel.CurrentSearchChanged += OnCurrentSearchChanged;
 
             _markedLines = markedLines;
             _transformationPerformer = transformationPerformer;
             _lineProvider = lineProvider;
-            _markedLines.Changed += () => MarkedLinesChanged?.Invoke();
+            _markedLines.Changed += OnMarkedLinesChanged;
             _fileHolder = logModelFacade.LogFile.Open();
 
             CopyPathToClipboardCommand =
@@ -54,6 +56,20 @@ namespace LogGrokCore
 
             OpenContainingFolderCommand = new DelegateCommand(() => OpenContainingFolder(logFileFilePath));
             DocumentId = logFileFilePath;
+        }
+
+        private void OnCurrentLineChanged(int lineNumber) => NavigateTo(lineNumber);
+        private void OnCurrentSearchChanged(Regex regex) => LogViewModel.HighlightRegex = regex;
+        private void OnMarkedLinesChanged() => MarkedLinesChanged?.Invoke();
+
+        public void Dispose()
+        {
+            if (_disposed) return;
+            _disposed = true;
+            SearchViewModel.CurrentLineChanged -= OnCurrentLineChanged;
+            SearchViewModel.CurrentSearchChanged -= OnCurrentSearchChanged;
+            _markedLines.Changed -= OnMarkedLinesChanged;
+            _fileHolder?.Dispose();
         }
 
         public string DocumentId { get; }

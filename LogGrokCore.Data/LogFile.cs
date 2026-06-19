@@ -15,7 +15,10 @@ namespace LogGrokCore.Data
         {
             _xorMask = xorMask;
             FilePath = filePath;
-            FileSize = OpenFileForSequentialRead(FilePath).Length;
+            using (var stream = OpenFileForSequentialRead(FilePath))
+            {
+                FileSize = stream.Length;
+            }
             _encoding= new Lazy<Encoding>(DetectEncoding);
         }
 
@@ -38,7 +41,11 @@ namespace LogGrokCore.Data
         private Encoding DetectEncoding()
         {
             var buffer = new byte[8192];
-            var length = OpenForSequentialRead().Read(buffer, 0, buffer.Length);
+            int length;
+            using (var stream = OpenForSequentialRead())
+            {
+                length = stream.Read(buffer, 0, buffer.Length);
+            }
             var span = buffer.AsSpan(length);
 
             // try to find BOM
