@@ -122,7 +122,7 @@ namespace LogGrokCore.Data.Tests
             var provider = new TestItemProvider(10);
             var list = new VirtualList<string, string>(provider, s => s);
 
-            Assert.ThrowsException<NotSupportedException>(() => list.Add("test"));
+            Assert.ThrowsExactly<NotSupportedException>(() => list.Add("test"));
         }
 
         [TestMethod]
@@ -131,7 +131,7 @@ namespace LogGrokCore.Data.Tests
             var provider = new TestItemProvider(10);
             var list = new VirtualList<string, string>(provider, s => s);
 
-            Assert.ThrowsException<NotSupportedException>(() => list.RemoveAt(0));
+            Assert.ThrowsExactly<NotSupportedException>(() => list.RemoveAt(0));
         }
 
         [TestMethod]

@@ -100,7 +100,7 @@ namespace LogGrokCore.Data.Tests
             lineIndex.Add(50);
 
             // Trying to get the last line before Finish should throw
-            Assert.ThrowsException<IndexOutOfRangeException>(() => lineIndex.GetLine(1));
+            Assert.ThrowsExactly<IndexOutOfRangeException>(() => lineIndex.GetLine(1));
         }
 
         [TestMethod]
