@@ -12,6 +12,12 @@
     <SolidColorBrush x:Key="AvalonDock_ThemeMetro_BaseColor5" Color="#FF333333" />
     <SolidColorBrush x:Key="AvalonDock_ThemeMetro_BaseColor3" Color="#FF41B1E1" />
 
+    <!-- Log-area palette; ThemeService overrides these per theme (light defaults here). -->
+    <SolidColorBrush x:Key="LogGrok.Brushes.Background" Color="#FFFFFFFF" />
+    <SolidColorBrush x:Key="LogGrok.Brushes.Foreground" Color="#FF1E1E1E" />
+    <SolidColorBrush x:Key="LogGrok.Brushes.Selection" Color="#FFCCE8FF" />
+    <SolidColorBrush x:Key="LogGrok.Brushes.Hover" Color="#FFE5F1FB" />
+
     <!-- Classic checkbox focus visual (removed from MahApps 2.x, still referenced by the theme). -->
     <Style x:Key="CheckBoxFocusVisual">
         <Setter Property="Control.Template">

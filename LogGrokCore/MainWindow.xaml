@@ -99,9 +99,10 @@
     <mahapps:MetroWindow.InputBindings>
         <KeyBinding Command="{Binding OpenFileCommand}" Gesture="CTRL+O" />
     </mahapps:MetroWindow.InputBindings>
-    <Grid>
+    <Grid Background="{DynamicResource LogGrok.Brushes.Background}">
         <DockingManager
             x:Name="DockingManager" Theme="{StaticResource MetroTheme}"
+                                  Background="{DynamicResource LogGrok.Brushes.Background}"
                                   GridSplitterWidth="10"
                                   GridSplitterHeight="10"
                                   avalonDockExtensions:BindingBehavior.CurrentDocument="{Binding CurrentDocument}"
