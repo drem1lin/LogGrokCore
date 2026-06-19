@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Buffers;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
@@ -165,7 +166,7 @@ namespace LogGrokCore.Data
         {
             ulong ToLongBe(byte[] value)
             {
-                return BitConverter.ToUInt64(value.Reverse().ToArray(), value.Length - sizeof(ulong));
+                return BitConverter.ToUInt64(((IEnumerable<byte>)value).Reverse().ToArray(), value.Length - sizeof(ulong));
             }
             
             var patternLength = r.Length;
