@@ -51,32 +51,22 @@ namespace LogGrokCore.Colors
         
         public ColorSettings(Configuration.ColorSettings colorSettingsConfiguration)
         {
-            // Adapt foreground colours for readability when the dark theme is active.
-            // Captured once per construction, so documents opened in dark get adapted colours.
-            var isDark = Appearance.ThemeService.IsDark;
-
-            Brush? CreateBrush(string colorString, bool adaptForeground)
+            Brush? CreateBrush(string colorString)
             {
                 if (string.IsNullOrEmpty(colorString)) return null;
                 var color = (Color)ColorConverter.ConvertFromString(colorString);
-                if (adaptForeground && isDark)
-                    color = Appearance.ThemeColors.AdaptForegroundForDarkTheme(color);
                 var brush = new SolidColorBrush(color);
-
+                
                 brush.Freeze();
                 return brush;
             }
-
-            var themeKey = isDark ? "d" : "l";
 
             ColorRule Convert(Configuration.ColorRule rule)
             {
                 return new ColorRule(
                     CachedRegexes.GetOrAdd(rule.RegexString, s => new Regex(s, RegexOptions.Compiled)),
-                    CachedBruches.GetOrAdd($"fg|{themeKey}|{rule.ForegroundColor}",
-                        _ => CreateBrush(rule.ForegroundColor, adaptForeground: true)),
-                    CachedBruches.GetOrAdd($"bg|{rule.BackgroundColor}",
-                        _ => CreateBrush(rule.BackgroundColor, adaptForeground: false)));
+                    CachedBruches.GetOrAdd(rule.ForegroundColor, CreateBrush),
+                    CachedBruches.GetOrAdd(rule.BackgroundColor, CreateBrush));
             }
 
             Rules = colorSettingsConfiguration.Rules.Select(Convert).ToList();
