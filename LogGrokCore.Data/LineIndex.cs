@@ -114,10 +114,22 @@ namespace LogGrokCore.Data
 
         public void Finish(int lastLength)
         {
-            _lastLineLength = lastLength;
+            lock (_lineStarts)
+            {
+                _lastLineLength = lastLength;
+            }
         }
         
-        public bool IsFinished => _lastLineLength.HasValue;
+        public bool IsFinished
+        {
+            get
+            {
+                lock (_lineStarts)
+                {
+                    return _lastLineLength.HasValue;
+                }
+            }
+        }
 
         private readonly IndexTree<long, LongsLeaf> _lineStarts 
             = new(16, l => new LongsLeaf(l, 0));

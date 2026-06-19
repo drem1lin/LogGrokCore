@@ -29,7 +29,7 @@ namespace LogGrokCore
         {
             _execute = o =>
             {
-                if (o == null) throw new NullReferenceException("Execute: parameter is null.");
+                if (o == null) throw new ArgumentNullException(nameof(o), "Execute: parameter is null.");
                 execute(o);
             };
         }

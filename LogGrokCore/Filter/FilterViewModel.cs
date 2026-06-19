@@ -9,12 +9,13 @@ using LogGrokCore.Data.Index;
 
 namespace LogGrokCore.Filter
 {
-    public class FilterViewModel : ViewModelBase
+    public class FilterViewModel : ViewModelBase, System.IDisposable
     {
         private readonly FilterSettings _filterSettings;
         private readonly Indexer _indexer;
         private string? _textFilter;
         private readonly int _indexedFieldIndex;
+        private bool _disposed;
 
         public FilterViewModel(
             string fieldName,
@@ -24,7 +25,7 @@ namespace LogGrokCore.Filter
         {
             
             _filterSettings = filterSettings;
-            _filterSettings.ExclusionsChanged += () => InvokePropertyChanged(nameof(IsFilterApplied));
+            _filterSettings.ExclusionsChanged += OnExclusionsChanged;
             
             _indexer = indexer;
             _indexedFieldIndex = metaInformation.GetIndexedFieldIndexByName(fieldName);
@@ -37,6 +38,16 @@ namespace LogGrokCore.Filter
                 fieldValues.Select(CreateElementViewModel));
 
             _indexer.NewComponentAdded += OnNewComponentAdded;
+        }
+
+        private void OnExclusionsChanged() => InvokePropertyChanged(nameof(IsFilterApplied));
+
+        public void Dispose()
+        {
+            if (_disposed) return;
+            _disposed = true;
+            _filterSettings.ExclusionsChanged -= OnExclusionsChanged;
+            _indexer.NewComponentAdded -= OnNewComponentAdded;
         }
 
         private readonly ConcurrentBag<(int componentNumber, IndexKey key)> _newComponentsQueue = new();

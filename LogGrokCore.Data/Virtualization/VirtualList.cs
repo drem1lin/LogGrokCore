@@ -126,7 +126,17 @@ using System.Linq;
         {
         	while (_pageCache.Count > MaxCacheSize)
         	{
-                var oldestKey = _pageCache.OrderBy(pair => pair.Value.Item2).First().Key;
+                var oldestKey = -1;
+                var oldestGeneration = int.MaxValue;
+                foreach (var pair in _pageCache)
+                {
+                    if (pair.Value.genearation < oldestGeneration)
+                    {
+                        oldestGeneration = pair.Value.genearation;
+                        oldestKey = pair.Key;
+                    }
+                }
+                if (oldestKey < 0) break;
                 var (pageToReturn, _) = _pageCache[oldestKey];
                 _ = _pageCache.Remove(oldestKey);
                 pageToReturn.Dispose();

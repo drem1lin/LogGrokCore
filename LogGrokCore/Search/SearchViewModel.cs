@@ -143,19 +143,18 @@ namespace LogGrokCore.Search
         private static void Throttle(ref DispatcherTimer? throttleTimer, Action action, TimeSpan interval)
         {
             throttleTimer?.Stop();
-            throttleTimer = new DispatcherTimer(DispatcherPriority.Normal, Dispatcher.CurrentDispatcher)
+            var newTimer = new DispatcherTimer(DispatcherPriority.Normal, Dispatcher.CurrentDispatcher)
             {
                 Interval = interval
             };
 
-            DispatcherTimer? timer = throttleTimer;
-            throttleTimer.Tick += (_, _) =>
+            newTimer.Tick += (_, _) =>
             {
-                timer.Stop();
-                timer = null;
+                newTimer.Stop();
                 action();
             };
-            throttleTimer.Start();
+            throttleTimer = newTimer;
+            newTimer.Start();
         }
 
         private void CommitSearchPatternImmediately(string searchText, in bool isCaseSensitive, in bool useRegex)

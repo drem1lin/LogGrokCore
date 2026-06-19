@@ -154,12 +154,19 @@ namespace LogGrokCore
         {
             var delay = 10;
             IsLoading = true;
-            while (!_logModelFacade.IsLoaded)
+            try
             {
-                Lines.UpdateCount();
-                await Task.Delay(delay);
-                if (delay < 500)
-                    delay *= 2;
+                while (!_logModelFacade.IsLoaded)
+                {
+                    Lines.UpdateCount();
+                    await Task.Delay(delay).ConfigureAwait(false);
+                    if (delay < 500)
+                        delay *= 2;
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Trace.TraceError($"Error updating document while loading: {ex.Message}");
             }
 
             Lines.UpdateCount();
@@ -168,10 +175,17 @@ namespace LogGrokCore
 
         private async void UpdateProgress()
         {
-            while (!_logModelFacade.IsLoaded)
+            try
             {
-                await Task.Delay(200);
-                Progress = _logModelFacade.LoadProgress;
+                while (!_logModelFacade.IsLoaded)
+                {
+                    await Task.Delay(200).ConfigureAwait(false);
+                    Progress = _logModelFacade.LoadProgress;
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Trace.TraceError($"Error updating progress: {ex.Message}");
             }
 
             Progress = 100;

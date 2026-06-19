@@ -48,8 +48,12 @@ namespace LogGrokCore.Data
         public void Dispose()
         {
             _cancellationTokenSource.Cancel();
-            _loadingTask.Wait();
+            if (!_loadingTask.Wait(TimeSpan.FromSeconds(10)))
+            {
+                Trace.TraceWarning("Loading task did not complete within timeout during Dispose.");
+            }
             _loadingTask.Dispose();
+            _cancellationTokenSource.Dispose();
         }
     }
 }

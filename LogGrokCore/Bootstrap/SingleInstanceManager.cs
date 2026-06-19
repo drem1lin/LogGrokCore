@@ -61,6 +61,10 @@ namespace LogGrokCore.Bootstrap
             catch (OperationCanceledException)
             {
             }
+            catch (Exception ex)
+            {
+                Trace.TraceError($"Error in pipe listener: {ex.Message}");
+            }
         }
 
         private void TransferArgumentsToFirstInstance(string[] args)

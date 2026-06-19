@@ -123,9 +123,9 @@ namespace LogGrokCore.Bootstrap
                 var process = Process.Start(info);
                 process?.WaitForExit(30000);
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                // ignored
+                Trace.TraceWarning($"Failed to start elevated process for WER setup: {ex.Message}");
             }
         }
     }
