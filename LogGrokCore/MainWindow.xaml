@@ -13,6 +13,7 @@
                      localControls:DragnDropBehavior.AllowDrop="True"
                      localControls:DragnDropBehavior.DropCommand="{Binding DropCommand}"
                      SaveWindowPosition="True"
+                     Icon="pack://application:,,,/LogGrokCore;component/icon.ico"
                      MinWidth="1024"
                      MinHeight="768"
                      mc:Ignorable="d"
