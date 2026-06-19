@@ -29,6 +29,9 @@ namespace LogGrokCore
         public ObservableCollection<DocumentViewModel> Documents { get; }
 
         public MarkedLinesViewModel MarkedLinesViewModel { get; }
+
+        /// <summary>True when no document is open; drives the dark empty-state overlay.</summary>
+        public bool IsEmpty => Documents.Count == 0;
         
         public ICommand OpenFileCommand => new DelegateCommand(OpenFile);
 
@@ -48,6 +51,7 @@ namespace LogGrokCore
             _applicationSettings = applicationSettings;
             _searchAutocompleteCache = searchAutocompleteCache;
             Documents = new ObservableCollection<DocumentViewModel>();
+            Documents.CollectionChanged += (_, _) => InvokePropertyChanged(nameof(IsEmpty));
             MarkedLinesViewModel = markedLinesViewModelFactory(Documents);
             OpenSettings = new DelegateCommand(() =>
             {
