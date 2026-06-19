@@ -53,9 +53,9 @@
                         <virtualizingStackPanel1:VirtualizingStackPanel
                             CurrentPosition="{Binding CurrentItemIndex}" 
                             textRender:TextView.HighlightRegex="{Binding HighlightRegex}"
-                            Tag="{Binding 
-                                RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type listControls:ListView}}}"
-                            ContextMenu="{StaticResource LogViewContextMenu}" 
+                            Tag="{Binding Path=(listControls:ListViewOwner.Owner),
+                                RelativeSource={RelativeSource Self}}"
+                            ContextMenu="{StaticResource LogViewContextMenu}"
                             textRender:ClippingRectProviderBehavior.ClippingRectProvider="{Binding RelativeSource={RelativeSource Self}}"/>
                     </ItemsPanelTemplate>
                 </ListView.ItemsPanel>

@@ -51,8 +51,8 @@
                 <listControls:MarkedLinesListView.ItemsPanel>
                     <ItemsPanelTemplate>
                         <VirtualizingStackPanel
-                            Tag="{Binding
-                                RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type listControls:MarkedLinesListView}}}"
+                            Tag="{Binding Path=(listControls:ListViewOwner.Owner),
+                                RelativeSource={RelativeSource Self}}"
                             ContextMenu="{StaticResource LogViewContextMenu}" />
                     </ItemsPanelTemplate>
                 </listControls:MarkedLinesListView.ItemsPanel>

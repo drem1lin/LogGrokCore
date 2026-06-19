@@ -16,8 +16,11 @@
         </Style.Setters>
     </Style>
     <DataTemplate x:Key="NormalTemplate" DataType="{x:Type logGrokCore:LinePartViewModel}">
-        <textRender:TextView 
-            Tag="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type listControls:ListView}}}"
+        <!-- Tag carries the owning ListView to the context menu (PlacementTarget.Tag);
+             sourced from the inherited ListViewOwner.Owner so it never fails for
+             detached/recycled cells. -->
+        <textRender:TextView
+            Tag="{Binding Path=(listControls:ListViewOwner.Owner), RelativeSource={RelativeSource Self}}"
             TextModel="{Binding TextModel, Mode=OneWay}" />
     </DataTemplate>
     <Style TargetType="{x:Type ContentControl}" x:Key="LogGridViewCellStyle">

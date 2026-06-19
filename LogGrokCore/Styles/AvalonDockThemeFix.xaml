@@ -1,0 +1,29 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <!--
+        AvalonDock.Themes.Metro references these keys via DynamicResource, but the
+        theme is only merged into the DockingManager's scope, so lookups from
+        AvalonDock's separate windows (floating/overlay/popup) and from styles that
+        expect MahApps 1.x keys fail with "Resource not found" trace warnings.
+        Define them at application scope so they resolve everywhere.
+
+        BaseColor5 / BaseColor3 values mirror AvalonDock.Themes.Metro's own Brushes.xaml.
+    -->
+    <SolidColorBrush x:Key="AvalonDock_ThemeMetro_BaseColor5" Color="#FF333333" />
+    <SolidColorBrush x:Key="AvalonDock_ThemeMetro_BaseColor3" Color="#FF41B1E1" />
+
+    <!-- Classic checkbox focus visual (removed from MahApps 2.x, still referenced by the theme). -->
+    <Style x:Key="CheckBoxFocusVisual">
+        <Setter Property="Control.Template">
+            <Setter.Value>
+                <ControlTemplate>
+                    <Rectangle Margin="1"
+                               SnapsToDevicePixels="True"
+                               Stroke="#60000000"
+                               StrokeThickness="1"
+                               StrokeDashArray="1 2" />
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+</ResourceDictionary>

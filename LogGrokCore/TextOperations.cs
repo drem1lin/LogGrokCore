@@ -89,8 +89,18 @@ namespace LogGrokCore
 
         public static IEnumerable<(int start, int length)> GetJsonRanges(string source)
         {
-            return GetBracedGroups(source.AsSpan()).Where(interval => 
+            return GetBracedGroups(source.AsSpan()).Where(interval =>
                 IsValidJson(source.Substring(interval.start, interval.length)));
+        }
+
+        /// <summary>
+        /// Returns <paramref name="source"/> with every embedded JSON object pretty-printed
+        /// (indented). If the text contains no valid JSON it is returned unchanged.
+        /// </summary>
+        public static string FormatJson(string source)
+        {
+            var jsonRanges = GetJsonRanges(source).ToArray();
+            return jsonRanges.Length == 0 ? source : FormatInlineJson(source, jsonRanges);
         }
         
         public static IEnumerable<(int start, int length)> GetBracedGroups(ReadOnlySpan<char> sourceText)

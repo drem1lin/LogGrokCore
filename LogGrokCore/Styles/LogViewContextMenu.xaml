@@ -23,8 +23,7 @@
                 </DataTrigger.Setters>
             </DataTrigger>
             <DataTrigger
-                Binding="{Binding CanFilter, 
-                Converter={StaticResource BooleanToVisibilityConverter}}"
+                Binding="{Binding CanFilter}"
                 Value="False">
                 <DataTrigger.Setters>
                     <Setter Property="Visibility" Value="Collapsed" />
@@ -45,6 +44,19 @@
                     VerticalAlignment="Center"
                     HorizontalAlignment="Center"
                     Kind="ContentCopy" />
+            </MenuItem.Icon>
+        </MenuItem>
+        <MenuItem Command="logGrokCore:RoutedCommands.CopyToClipboardFormatted"
+                  Header="Copy (formatted JSON)"
+                  InputGestureText="Ctrl+Shift+C"
+                  Visibility="{Binding RelativeSource={RelativeSource Self},
+                                              Path=IsEnabled,
+                                              Converter={StaticResource BooleanToVisibilityConverter}}">
+            <MenuItem.Icon>
+                <iconPacks:PackIconMaterial
+                    VerticalAlignment="Center"
+                    HorizontalAlignment="Center"
+                    Kind="CodeJson" />
             </MenuItem.Icon>
         </MenuItem>
         <MenuItem Command="logGrokCore:RoutedCommands.ToggleMarks"
