@@ -93,7 +93,6 @@ namespace LogGrokCore.Data.Tests
         }
 
         [TestMethod]
-        [ExpectedException(typeof(IndexOutOfRangeException))]
         public void GetLine_LastLineBeforeFinish_Throws()
         {
             var lineIndex = new LineIndex();
@@ -101,7 +100,7 @@ namespace LogGrokCore.Data.Tests
             lineIndex.Add(50);
 
             // Trying to get the last line before Finish should throw
-            _ = lineIndex.GetLine(1);
+            Assert.ThrowsException<IndexOutOfRangeException>(() => lineIndex.GetLine(1));
         }
 
         [TestMethod]

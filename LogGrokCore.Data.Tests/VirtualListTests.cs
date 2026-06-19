@@ -117,23 +117,21 @@ namespace LogGrokCore.Data.Tests
         }
 
         [TestMethod]
-        [ExpectedException(typeof(NotSupportedException))]
         public void Add_ThrowsNotSupported()
         {
             var provider = new TestItemProvider(10);
             var list = new VirtualList<string, string>(provider, s => s);
 
-            list.Add("test");
+            Assert.ThrowsException<NotSupportedException>(() => list.Add("test"));
         }
 
         [TestMethod]
-        [ExpectedException(typeof(NotSupportedException))]
         public void RemoveAt_ThrowsNotSupported()
         {
             var provider = new TestItemProvider(10);
             var list = new VirtualList<string, string>(provider, s => s);
 
-            list.RemoveAt(0);
+            Assert.ThrowsException<NotSupportedException>(() => list.RemoveAt(0));
         }
 
         [TestMethod]
