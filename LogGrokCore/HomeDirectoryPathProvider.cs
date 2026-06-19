@@ -21,7 +21,7 @@ namespace LogGrokCore
         private static string EnsureHomeDirectoryExists()
         {
             var dirName  = Path.Combine(
-                Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+                Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData),
                 Path.GetFileNameWithoutExtension(DirName),
                 "Data");
             Directory.CreateDirectory(dirName);

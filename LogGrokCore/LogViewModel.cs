@@ -152,24 +152,19 @@ namespace LogGrokCore
 
         private async void UpdateDocumentWhileLoading()
         {
-            var delay = 10;
             IsLoading = true;
             try
             {
-                while (!_logModelFacade.IsLoaded)
-                {
-                    Lines.UpdateCount();
-                    await Task.Delay(delay).ConfigureAwait(false);
-                    if (delay < 500)
-                        delay *= 2;
-                }
+                await LoadingUpdater.RunWhileAsync(
+                    () => _logModelFacade.IsLoaded,
+                    () => Lines.UpdateCount(),
+                    ms => Task.Delay(ms));
             }
             catch (Exception ex)
             {
                 System.Diagnostics.Trace.TraceError($"Error updating document while loading: {ex.Message}");
             }
 
-            Lines.UpdateCount();
             IsLoading = false;
         }
 

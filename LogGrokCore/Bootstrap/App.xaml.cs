@@ -70,7 +70,23 @@ namespace LogGrokCore.Bootstrap
         {
             _container.Resolve<SearchAutocompleteCache>().Save();
             _container.Dispose();
+            base.OnExit(e);
+
+            // During process shutdown the OS tears down windows (msctf/TSF ->
+            // DestroyWindow -> a managed window procedure) while the CLR is already
+            // shutting down, which makes the runtime fail-fast (0xc0000602). This is
+            // especially easy to hit when the window is closed quickly during loading.
+            // All persistent state is saved above, so terminate the process directly to
+            // skip that unstable managed-callback-during-loader-shutdown path.
+            Logger.FlushAll();
+            TerminateProcess(GetCurrentProcess(), 0);
         }
+
+        [System.Runtime.InteropServices.DllImport("kernel32.dll")]
+        private static extern IntPtr GetCurrentProcess();
+
+        [System.Runtime.InteropServices.DllImport("kernel32.dll")]
+        private static extern bool TerminateProcess(IntPtr hProcess, uint uExitCode);
 
         private void RegisterDependencies(IRegistrator container)
         {

@@ -9,6 +9,7 @@ using System.Windows;
 using System.Windows.Input;
 using LogGrokCore.AvalonDockExtensions;
 using LogGrokCore.Data;
+using LogGrokCore.Diagnostics;
 using LogGrokCore.MarkedLines;
 using LogGrokCore.Search;
 using Microsoft.Win32;
@@ -20,6 +21,7 @@ namespace LogGrokCore
         private DocumentViewModel? _currentDocument;
         private readonly ApplicationSettings _applicationSettings;
         private readonly SearchAutocompleteCache _searchAutocompleteCache;
+        private bool _isDebugLoggingEnabled;
 
         public ObservableCollection<DocumentViewModel> Documents { get; }
 
@@ -45,9 +47,13 @@ namespace LogGrokCore
             Documents = new ObservableCollection<DocumentViewModel>();
             MarkedLinesViewModel = markedLinesViewModelFactory(Documents);
             OpenSettings = new DelegateCommand(() =>
-            { 
+            {
                 OpenExternalFile(ApplicationSettings.SettingsFileName);
             });
+
+            // Reflect the persisted state and apply verbose logging if it was left enabled.
+            _isDebugLoggingEnabled = _applicationSettings.DebugSettings.EnableCrashDumps;
+            DebugLogging.SetVerbose(_isDebugLoggingEnabled);
 
             MarkedLinesViewModel.NavigationRequested += (document, index) =>
             {
@@ -108,6 +114,43 @@ namespace LogGrokCore
         public ICommand OpenSettings { get; }
 
         public ICommand ExitCommand => new DelegateCommand(() => Application.Current.Shutdown());
+
+        /// <summary>
+        /// When enabled, raises log verbosity to Trace and configures Windows Error
+        /// Reporting to capture full crash dumps under %PROGRAMDATA%\LogGrok2\Data\Dumps.
+        /// Bound two-way to a checkable menu item; the work happens in the setter.
+        /// </summary>
+        public bool IsDebugLoggingEnabled
+        {
+            get => _isDebugLoggingEnabled;
+            set
+            {
+                if (_isDebugLoggingEnabled == value)
+                    return;
+
+                if (TryApplyDebugLogging(value))
+                    _isDebugLoggingEnabled = value;
+
+                // Re-raise either way: on success to confirm, on failure to revert the menu check.
+                InvokePropertyChanged();
+            }
+        }
+
+        private bool TryApplyDebugLogging(bool enable)
+        {
+            // Crash-dump (WER) registration needs elevation; ask first so a declined UAC
+            // prompt leaves nothing half-applied.
+            if (!CrashDumpConfiguration.RequestConfigureElevated(enable))
+            {
+                Trace.TraceWarning("Debug logging toggle cancelled: crash dump configuration was not applied.");
+                return false;
+            }
+
+            DebugLogging.SetVerbose(enable);
+            ApplicationSettings.SetEnableCrashDumps(enable);
+            Logger.Get().Info("Debug logging and crash dumps {0}.", enable ? "enabled" : "disabled");
+            return true;
+        }
 
         private void OpenFile()
         {

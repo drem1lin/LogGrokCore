@@ -13,6 +13,7 @@
                      localControls:DragnDropBehavior.AllowDrop="True"
                      localControls:DragnDropBehavior.DropCommand="{Binding DropCommand}"
                      SaveWindowPosition="True"
+                     Icon="pack://application:,,,/LogGrokCore;component/icon.ico"
                      MinWidth="1024"
                      MinHeight="768"
                      mc:Ignorable="d"
@@ -44,6 +45,10 @@
                         </DataTemplate>
                     </MenuItem.HeaderTemplate>
                     <MenuItem Command="{Binding OpenFileCommand}" Header="Open" />
+                    <Separator />
+                    <MenuItem Header="Debug logging &amp; crash dumps"
+                              IsCheckable="True"
+                              IsChecked="{Binding IsDebugLoggingEnabled, Mode=TwoWay}" />
                     <Separator />
                     <MenuItem Command="{Binding ExitCommand}" Header="Exit" />
                 </MenuItem>
