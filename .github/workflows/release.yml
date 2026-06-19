@@ -1,0 +1,165 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version tag (e.g. 1.0.0)'
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: windows-latest
+
+    env:
+      VERSION: ${{ github.event.inputs.version || github.ref_name }}
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: Install .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: 10.0.x
+
+    - name: Determine version
+      id: version
+      shell: pwsh
+      run: |
+        $ver = "${{ env.VERSION }}" -replace '^v', ''
+        if (-not $ver) { $ver = "1.0.0" }
+        echo "RELEASE_VERSION=$ver" >> $env:GITHUB_OUTPUT
+        echo "Version: $ver"
+
+    - name: Restore
+      run: dotnet restore
+
+    - name: Run tests
+      run: dotnet test --configuration Release --no-restore --verbosity normal
+
+    - name: Publish self-contained (x64)
+      run: |
+        dotnet publish LogGrokCore/LogGrokCore.csproj `
+          --configuration Release `
+          --runtime win-x64 `
+          --self-contained true `
+          -p:PublishSingleFile=true `
+          -p:IncludeNativeLibrariesForSelfExtract=true `
+          -p:Version=${{ steps.version.outputs.RELEASE_VERSION }} `
+          --output ./publish/x64
+
+    - name: Publish framework-dependent (x64)
+      run: |
+        dotnet publish LogGrokCore/LogGrokCore.csproj `
+          --configuration Release `
+          --runtime win-x64 `
+          --self-contained false `
+          -p:Version=${{ steps.version.outputs.RELEASE_VERSION }} `
+          --output ./publish/x64-fdd
+
+    - name: Create self-signed certificate
+      shell: pwsh
+      run: |
+        $cert = New-SelfSignedCertificate `
+          -Type Custom `
+          -Subject "CN=LogGrokCore" `
+          -KeyUsage DigitalSignature `
+          -FriendlyName "LogGrokCore Package Signing" `
+          -CertStoreLocation "Cert:\CurrentUser\My" `
+          -TextExtension @("2.5.29.37={text}1.3.6.1.5.5.7.3.3", "2.5.29.19={text}")
+        $thumbprint = $cert.Thumbprint
+        echo "CERT_THUMBPRINT=$thumbprint" >> $env:GITHUB_ENV
+        
+        # Export for reference
+        $pwd = ConvertTo-SecureString -String "LogGrokCore2024" -Force -AsPlainText
+        Export-PfxCertificate -cert "Cert:\CurrentUser\My\$thumbprint" -FilePath ./LogGrokCore.pfx -Password $pwd
+
+    - name: Create MSIX package
+      shell: pwsh
+      run: |
+        $version = "${{ steps.version.outputs.RELEASE_VERSION }}.0"
+        # Ensure 4-part version
+        $parts = $version.Split('.')
+        while ($parts.Count -lt 4) { $parts += "0" }
+        $msixVersion = ($parts[0..3]) -join '.'
+        
+        # Update manifest version
+        $manifest = Get-Content ./LogGrokCore/Package.appxmanifest -Raw
+        $manifest = $manifest -replace 'Version="1.0.0.0"', "Version=`"$msixVersion`""
+        
+        # Create layout directory
+        New-Item -ItemType Directory -Force -Path ./msix-layout | Out-Null
+        Copy-Item -Path ./publish/x64-fdd/* -Destination ./msix-layout/ -Recurse
+        Set-Content -Path ./msix-layout/AppxManifest.xml -Value $manifest
+        
+        # Create placeholder images
+        New-Item -ItemType Directory -Force -Path ./msix-layout/Images | Out-Null
+        
+        # Generate minimal PNG files for MSIX (1x1 transparent PNGs)
+        $pngHeader = [byte[]]@(137,80,78,71,13,10,26,10,0,0,0,13,73,72,68,82,0,0,0,1,0,0,0,1,8,6,0,0,0,31,21,196,137,0,0,0,10,73,68,65,84,120,156,98,0,0,0,2,0,1,226,33,188,51,0,0,0,0,73,69,78,68,174,66,96,130)
+        [System.IO.File]::WriteAllBytes("./msix-layout/Images/StoreLogo.png", $pngHeader)
+        [System.IO.File]::WriteAllBytes("./msix-layout/Images/Square150x150Logo.png", $pngHeader)
+        [System.IO.File]::WriteAllBytes("./msix-layout/Images/Square44x44Logo.png", $pngHeader)
+        [System.IO.File]::WriteAllBytes("./msix-layout/Images/Wide310x150Logo.png", $pngHeader)
+        
+        # Find makeappx.exe
+        $sdkPath = Get-ChildItem "C:\Program Files (x86)\Windows Kits\10\bin\10.*\x64\makeappx.exe" | 
+          Sort-Object FullName -Descending | Select-Object -First 1
+        
+        & $sdkPath.FullName pack /d ./msix-layout /p ./LogGrokCore-$msixVersion.msix /o
+        
+        # Sign the MSIX
+        $signtool = $sdkPath.FullName -replace 'makeappx\.exe', 'signtool.exe'
+        & $signtool sign /fd SHA256 /a /f ./LogGrokCore.pfx /p "LogGrokCore2024" ./LogGrokCore-$msixVersion.msix
+        
+        echo "MSIX_PATH=./LogGrokCore-$msixVersion.msix" >> $env:GITHUB_ENV
+        echo "MSIX_VERSION=$msixVersion" >> $env:GITHUB_ENV
+
+    - name: Create ZIP archive
+      shell: pwsh
+      run: |
+        $version = "${{ steps.version.outputs.RELEASE_VERSION }}"
+        Compress-Archive -Path ./publish/x64/* -DestinationPath "./LogGrokCore-$version-win-x64-selfcontained.zip"
+        Compress-Archive -Path ./publish/x64-fdd/* -DestinationPath "./LogGrokCore-$version-win-x64.zip"
+
+    - name: Create GitHub Release
+      uses: softprops/action-gh-release@v2
+      with:
+        tag_name: ${{ env.VERSION }}
+        name: LogGrokCore ${{ steps.version.outputs.RELEASE_VERSION }}
+        draft: false
+        prerelease: ${{ contains(env.VERSION, 'alpha') || contains(env.VERSION, 'beta') || contains(env.VERSION, 'rc') }}
+        generate_release_notes: true
+        files: |
+          ./LogGrokCore-${{ steps.version.outputs.RELEASE_VERSION }}-win-x64-selfcontained.zip
+          ./LogGrokCore-${{ steps.version.outputs.RELEASE_VERSION }}-win-x64.zip
+          ${{ env.MSIX_PATH }}
+          ./LogGrokCore.pfx
+        body: |
+          ## Installation
+          
+          ### MSIX Installer (Recommended)
+          1. Download `LogGrokCore-${{ env.MSIX_VERSION }}.msix`
+          2. Download `LogGrokCore.pfx` certificate
+          3. Install the certificate: Right-click → Install PFX → Local Machine → Trusted People
+          4. Double-click the `.msix` file to install
+          
+          ### Portable (Self-contained)
+          Download `LogGrokCore-${{ steps.version.outputs.RELEASE_VERSION }}-win-x64-selfcontained.zip` — no .NET runtime required.
+          
+          ### Portable (Framework-dependent)
+          Download `LogGrokCore-${{ steps.version.outputs.RELEASE_VERSION }}-win-x64.zip` — requires .NET 10 runtime.
+          
+          ## Requirements
+          - Windows 10 version 1809+ (build 17763) or later
+          - x64 architecture
