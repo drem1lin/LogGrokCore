@@ -29,7 +29,6 @@
                 <ResourceDictionary Source="Styles/ListViewItemStyle.xaml" />
             </ResourceDictionary.MergedDictionaries>
             <th:MetroTheme x:Key="MetroTheme" />
-            <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
             <localControls:StringShortenerConvereter x:Key="StringShortenerConverter" />
             <avalonDockExtensions:MenuItemCollection x:Key="AdditionalDocumentMenuItems">
                 <MenuItem Header="Copy Filename" Command="{Binding Model.Content.CopyFilenameToClipboardCommand}" />
@@ -128,22 +127,5 @@
                 </Style>
             </DockingManager.LayoutItemContainerStyle>
         </DockingManager>
-
-        <!-- Dark empty-state shown while no document is open, so AvalonDock's light
-             document well is not visible (it cannot be themed cleanly on 4.70.3). -->
-        <Border Background="{DynamicResource LogGrok.Brushes.Background}"
-                Visibility="{Binding IsEmpty, Converter={StaticResource BooleanToVisibilityConverter}}">
-            <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Opacity="0.55">
-                <iconPacks:PackIconMaterial Kind="FileDocumentOutline"
-                                            Width="48" Height="48"
-                                            HorizontalAlignment="Center"
-                                            Foreground="{DynamicResource LogGrok.Brushes.Foreground}" />
-                <TextBlock Margin="0,12,0,0"
-                           HorizontalAlignment="Center"
-                           FontSize="15"
-                           Foreground="{DynamicResource LogGrok.Brushes.Foreground}"
-                           Text="Open a log file  (Ctrl+O)" />
-            </StackPanel>
-        </Border>
     </Grid>
 </mahapps:MetroWindow>
