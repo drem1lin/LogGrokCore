@@ -30,9 +30,6 @@
                 Value="{Binding Progress}"
                 Visibility="{Binding IsLoading, Converter={StaticResource BooleanToVisibilityConverter}}" />
             <listControls:ListView Grid.Row="1" ItemsSource="{Binding Lines}"
-                                    Background="{DynamicResource LogGrok.Brushes.Background}"
-                                    Foreground="{DynamicResource LogGrok.Brushes.Foreground}"
-                                    BorderThickness="0"
                                     SelectionMode="Extended"
                                     ReadonlySelectedItems="{Binding SelectedItems,
                                                             Mode=OneWayToSource}"
