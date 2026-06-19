@@ -3,7 +3,8 @@
                     xmlns:gridView="clr-namespace:LogGrokCore.Controls.GridView"
                     xmlns:listControls="clr-namespace:LogGrokCore.Controls.ListControls"
                     xmlns:logGrokCore="clr-namespace:LogGrokCore"
-                    xmlns:textRender="clr-namespace:LogGrokCore.Controls.TextRender">
+                    xmlns:textRender="clr-namespace:LogGrokCore.Controls.TextRender"
+                    xmlns:diag="clr-namespace:System.Diagnostics;assembly=WindowsBase">
     
     <ResourceDictionary.MergedDictionaries>
         <ResourceDictionary Source="LogViewContextMenu.xaml"/>
@@ -16,7 +17,16 @@
         </Style.Setters>
     </Style>
     <DataTemplate x:Key="NormalTemplate" DataType="{x:Type logGrokCore:LinePartViewModel}">
-        <textRender:TextView 
+        <!--
+            Tag carries the owning ListView to the context menu (which reads
+            PlacementTarget.Tag). During virtualized container generation the cell is
+            momentarily detached, so this FindAncestor binding fails on the first pass
+            and logs "Cannot find source for binding"; it resolves once the cell is
+            attached. Silence the (benign) trace on this leaf cell rather than re-architect
+            virtualization. TextModel below is unaffected functionally.
+        -->
+        <textRender:TextView
+            diag:PresentationTraceSources.TraceLevel="None"
             Tag="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type listControls:ListView}}}"
             TextModel="{Binding TextModel, Mode=OneWay}" />
     </DataTemplate>
