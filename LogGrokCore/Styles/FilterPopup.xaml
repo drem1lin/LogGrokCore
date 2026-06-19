@@ -32,7 +32,7 @@
                             CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=Popup}}" />
             </filterPopup:ResizablePopup.InputBindings>
             <Border BorderBrush="LightGray" BorderThickness="1">
-                <Grid Background="White">
+                <Grid Background="{DynamicResource MahApps.Brushes.ThemeBackground}">
                     <AdornerDecorator>
                         <Grid Margin="4">
                             <Grid.Resources>
