@@ -21,7 +21,9 @@ namespace LogGrokCore.Diagnostics
               Win32Exception e => IsKnown(e, KnownWin32ExceptionMethods),
               FileNotFoundException e => e.FileName != null && KnownSerializationAssemblies.Any(k => e.FileName.Contains(k)),
               TaskCanceledException => true,
-              OperationCanceledException e => e.StackTrace?.Contains(typeof(Pipeline).FullName!) ?? false,
+              OperationCanceledException e =>
+                  (e.StackTrace?.Contains(typeof(Pipeline).FullName!) ?? false)
+                  || (e.StackTrace?.Contains("System.IO.Pipes.PipeStream") ?? false),
               _ when exception.GetType().Name == "TypeNameParserException" => true,
               _ => false
           };
@@ -36,8 +38,8 @@ namespace LogGrokCore.Diagnostics
 
       public static readonly string[] KnownSerializationAssemblies =
       {
-          "Xceed.Wpf.AvalonDock.XmlSerializers.dll",
-          "ControlzEx.XmlSerializers.dll"
+          "Xceed.Wpf.AvalonDock.XmlSerializers",
+          "ControlzEx.XmlSerializers"
       };
       
       private static readonly string[] KnownArgumentExceptionMethods = {
