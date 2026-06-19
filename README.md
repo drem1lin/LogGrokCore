@@ -17,7 +17,7 @@ A fast, lightweight WPF log viewer with virtualized rendering, regex search, and
 ## Requirements
 
 - Windows 10+ 
-- .NET 7.0 Runtime
+- .NET 10.0 Runtime
 
 ## Building
 
