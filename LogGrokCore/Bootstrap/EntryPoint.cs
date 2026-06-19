@@ -1,20 +1,12 @@
-﻿using System;
-using System.Diagnostics;
+using System;
 using System.IO;
 using System.Linq;
-using System.Net.NetworkInformation;
-using DryIoc;
-using Microsoft.Win32;
-using Microsoft.Xaml.Behaviors.Media;
+using LogGrokCore.Diagnostics;
 
 namespace LogGrokCore.Bootstrap
 {
     static class EntryPoint
     {
-        private const string EnableWerOnly = "EnableWerOnly";
-        private const string DisableWerOnly = "DisableWerOnly";
-        private static string LogGrokErrorReportingKeyPath = $@"SOFTWARE\Microsoft\Windows\Windows Error Reporting\LocalDumps\{Path.GetFileName(Environment.ProcessPath)}";
-
         [STAThread]
         public static void Main(string[] args)
         {
@@ -32,100 +24,49 @@ namespace LogGrokCore.Bootstrap
 
         private static bool IsNeedStopExecution(string? command)
         {
-            return command == EnableWerOnly || command == DisableWerOnly;
-        }
-
-        private static void EvaluateIfNeed(Action func, string arguemntToEvaluatedProcess, string? currentCommand)
-        {
-            try
-            {
-                func();
-            }
-            catch (UnauthorizedAccessException)
-            {
-                if (IsNeedStopExecution(currentCommand))
-                    return;
-
-                StartElevatedInstanceWithParam(arguemntToEvaluatedProcess);
-            }
+            return command == CrashDumpConfiguration.EnableWerOnlyArgument
+                   || command == CrashDumpConfiguration.DisableWerOnlyArgument;
         }
 
         private static void ConfigureErrorReporting(string? command)
         {
-            var isErrorReportingEnabled = IsErrorReportingEnabled();
-            var isCrashDumpsEnabled = ApplicationSettings.Instance().DebugSettings.EnableCrashDumps;
-            var isErrorReportingSettingsWasChanged = IsErrorReportingSettingsWasChanged();
+            var settings = ApplicationSettings.Instance().DebugSettings;
+            var isEnabled = CrashDumpConfiguration.IsEnabled();
+            var settingsChanged = CrashDumpConfiguration.SettingsChanged(settings.MaxDumpsCount);
 
-            var isNeedEnableWer = (isCrashDumpsEnabled && !isErrorReportingEnabled) || command == EnableWerOnly || isErrorReportingSettingsWasChanged;
-            var isNeedDisableWer = (!isCrashDumpsEnabled && isErrorReportingEnabled) || command == DisableWerOnly;
+            var isNeedEnableWer = (settings.EnableCrashDumps && !isEnabled)
+                                  || command == CrashDumpConfiguration.EnableWerOnlyArgument
+                                  || settingsChanged;
+            var isNeedDisableWer = (!settings.EnableCrashDumps && isEnabled)
+                                   || command == CrashDumpConfiguration.DisableWerOnlyArgument;
 
             if (isNeedEnableWer)
             {
-                EvaluateIfNeed(EnableErrorReporting, EnableWerOnly, command);
+                EvaluateIfNeed(
+                    () => CrashDumpConfiguration.Enable(
+                        HomeDirectoryPathProvider.GetDirectoryFullPath("Dumps"),
+                        settings.MaxDumpsCount),
+                    enable: true,
+                    command);
             }
             else if (isNeedDisableWer)
             {
-                EvaluateIfNeed(DisableErrorReporting, DisableWerOnly, command);
+                EvaluateIfNeed(CrashDumpConfiguration.Disable, enable: false, command);
             }
         }
 
-        private static bool IsErrorReportingSettingsWasChanged()
+        private static void EvaluateIfNeed(Action configure, bool enable, string? currentCommand)
         {
-            var key = Registry.LocalMachine.OpenSubKey(LogGrokErrorReportingKeyPath);
-
-            if (key == null) 
-                return false;
-
-            var maxDumpsCount = ApplicationSettings.Instance().DebugSettings.MaxDumpsCount;
-
-            return (int)key.GetValue("DumpCount", -1) != maxDumpsCount;
-        }
-
-        private static bool IsErrorReportingEnabled()
-        {
-            var key = Registry.LocalMachine.OpenSubKey(LogGrokErrorReportingKeyPath);
-            return key != null;
-        }
-
-        private static void DisableErrorReporting()
-        {
-            Registry.LocalMachine.DeleteSubKey(LogGrokErrorReportingKeyPath);
-        }
-
-        private static void EnableErrorReporting()
-        {
-
-            var key = Registry.LocalMachine.CreateSubKey(LogGrokErrorReportingKeyPath);
-            key.SetValue("DumpFolder",
-                HomeDirectoryPathProvider.GetDirectoryFullPath("Dumps"),
-                RegistryValueKind.ExpandString);
-
-            var maxDumpsCount = ApplicationSettings.Instance().DebugSettings.MaxDumpsCount;
-            key.SetValue("DumpCount", maxDumpsCount, RegistryValueKind.DWord);
-            key.SetValue("DumpType", 2, RegistryValueKind.DWord);
-        }
-
-        private static void StartElevatedInstanceWithParam(string argsToInstance)
-        {
-            var processPath = Environment.ProcessPath;
-            if (processPath == null)
-                return;
-
-            var info = new ProcessStartInfo(processPath)
-            {
-                UseShellExecute = true,
-                Arguments = argsToInstance,
-                Verb = "runas"
-            };
-
             try
             {
-                var process = Process.Start(info);
-                process?.WaitForExit(30000);
+                configure();
             }
-            catch (Exception ex)
+            catch (UnauthorizedAccessException)
             {
-                Trace.TraceWarning($"Failed to start elevated process for WER setup: {ex.Message}");
+                if (IsNeedStopExecution(currentCommand))
+                    return; // already running elevated; give up rather than loop
+
+                CrashDumpConfiguration.RequestConfigureElevated(enable);
             }
         }
     }

@@ -1,5 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.IO;
+using System.Text.RegularExpressions;
 using LogGrokCore.Colors.Configuration;
 using LogGrokCore.Controls.ListControls;
 using LogGrokCore.Data;
@@ -40,6 +43,43 @@ namespace LogGrokCore
             if (instance == null)
                 instance = Load();
             return instance;
+        }
+
+        /// <summary>
+        /// Updates the in-memory value and persists it back to appsettings.yaml with a
+        /// targeted single-line replace, so the surrounding hand-written config (comments,
+        /// formatting) is preserved. Best-effort: failures are logged, not thrown.
+        /// </summary>
+        public static void SetEnableCrashDumps(bool enabled)
+        {
+            Instance().DebugSettings.EnableCrashDumps = enabled;
+
+            try
+            {
+                var path = SettingsFileName;
+                if (!File.Exists(path))
+                    return;
+
+                var lines = File.ReadAllLines(path);
+                var regex = new Regex(@"^(\s*EnableCrashDumps\s*:\s*)(?:true|false)\s*$",
+                    RegexOptions.IgnoreCase);
+                for (var i = 0; i < lines.Length; i++)
+                {
+                    var match = regex.Match(lines[i]);
+                    if (!match.Success)
+                        continue;
+
+                    lines[i] = match.Groups[1].Value + (enabled ? "true" : "false");
+                    File.WriteAllLines(path, lines);
+                    return;
+                }
+
+                Trace.TraceWarning("EnableCrashDumps line not found in appsettings.yaml; value not persisted.");
+            }
+            catch (Exception ex)
+            {
+                Trace.TraceWarning($"Failed to persist EnableCrashDumps: {ex.Message}");
+            }
         }
 
         private static ApplicationSettings Load()
