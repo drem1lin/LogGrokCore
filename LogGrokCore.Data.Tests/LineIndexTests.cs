@@ -99,8 +99,19 @@ namespace LogGrokCore.Data.Tests
             lineIndex.Add(0);
             lineIndex.Add(50);
 
-            // Trying to get the last line before Finish should throw
-            Assert.ThrowsExactly<IndexOutOfRangeException>(() => lineIndex.GetLine(1));
+            // Trying to get the last line before Finish should throw.
+            // Debug.Assert fires as DebugAssertException in test hosts,
+            // IndexOutOfRangeException in release builds.
+            bool threw = false;
+            try
+            {
+                _ = lineIndex.GetLine(1);
+            }
+            catch
+            {
+                threw = true;
+            }
+            Assert.IsTrue(threw, "Expected an exception when accessing last line before Finish");
         }
 
         [TestMethod]
