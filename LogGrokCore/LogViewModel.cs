@@ -159,7 +159,7 @@ namespace LogGrokCore
                 while (!_logModelFacade.IsLoaded)
                 {
                     Lines.UpdateCount();
-                    await Task.Delay(delay).ConfigureAwait(false);
+                    await Task.Delay(delay);
                     if (delay < 500)
                         delay *= 2;
                 }
