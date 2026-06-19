@@ -132,7 +132,7 @@ public class Pipeline
                 var memoryOwner = MemoryPool<byte>.Shared.Rent((int) size);
 
                 _ = stream.Seek(firstLineOffset, SeekOrigin.Begin);
-                _ = stream.Read(memoryOwner.Memory.Span);
+                stream.ReadExactly(memoryOwner.Memory.Span.Slice(0, (int)size));
   
                 var source = new ValueTaskSource<PooledList<int>>();
                 var resultTask = new ValueTask<PooledList<int>>(source, 0);
