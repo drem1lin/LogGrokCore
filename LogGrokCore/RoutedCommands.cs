@@ -19,6 +19,13 @@ namespace LogGrokCore
 
         public static readonly RoutedUICommand CopyToClipboard;
 
+        public static readonly RoutedUICommand CopyToClipboardFormatted = new RoutedUICommand(
+            "Copy with formatted JSON", nameof(CopyToClipboardFormatted), typeof(UIElement),
+            new InputGestureCollection
+            {
+                new KeyGesture(Key.C, ModifierKeys.Control | ModifierKeys.Shift)
+            });
+
         public static readonly RoutedCommand ToggleMarks = new RoutedUICommand(
             "Mark", "Mark lines", typeof(UIElement),
             new InputGestureCollection { new KeyGesture(Key.Space) });

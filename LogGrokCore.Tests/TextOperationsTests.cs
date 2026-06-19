@@ -15,6 +15,25 @@ namespace LogGrokCore.Tests
         }
 
         [TestMethod]
+        public void FormatJson_PrettyPrintsEmbeddedJson()
+        {
+            var result = TextOperations.FormatJson("prefix {\"a\":1,\"b\":{\"c\":2}} suffix");
+
+            StringAssert.Contains(result, "prefix ");
+            StringAssert.Contains(result, "\"a\": 1");
+            StringAssert.Contains(result, "\"c\": 2");
+            // Indented output spans multiple lines.
+            Assert.IsTrue(result.Contains('\n'), "Formatted JSON should be multi-line.");
+        }
+
+        [TestMethod]
+        public void FormatJson_NoJson_ReturnsSourceUnchanged()
+        {
+            const string source = "just a plain log line, no json here";
+            Assert.AreEqual(source, TextOperations.FormatJson(source));
+        }
+
+        [TestMethod]
         public void TestCountLinesOne()
         {
             Assert.AreEqual(1, TextOperations.CountLines(OneLine));
