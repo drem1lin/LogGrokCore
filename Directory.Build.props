@@ -1,0 +1,6 @@
+<Project>
+  <PropertyGroup>
+    <!-- Prevent GitInfo from setting Version/PackageVersion from git tags -->
+    <GitVersion>false</GitVersion>
+  </PropertyGroup>
+</Project>
