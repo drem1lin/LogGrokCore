@@ -66,6 +66,13 @@
   <data name="Doc_CopyFilename" xml:space="preserve"><value>Kopiuj nazwę pliku</value></data>
   <data name="Doc_CopyFullPath" xml:space="preserve"><value>Kopiuj pełną ścieżkę</value></data>
   <data name="Doc_OpenContainingFolder" xml:space="preserve"><value>Otwórz folder zawierający</value></data>
+  <data name="Doc_Close" xml:space="preserve"><value>Zamknij</value></data>
+  <data name="Doc_CloseAllButThis" xml:space="preserve"><value>Zamknij wszystkie oprócz tego</value></data>
+  <data name="Doc_CloseAll" xml:space="preserve"><value>Zamknij wszystkie</value></data>
+  <data name="Doc_Float" xml:space="preserve"><value>Pływający</value></data>
+  <data name="Doc_DockAsDocument" xml:space="preserve"><value>Zadokuj jako dokument</value></data>
+  <data name="Doc_NewHorizontalTabGroup" xml:space="preserve"><value>Nowa pozioma grupa kart</value></data>
+  <data name="Doc_NewVerticalTabGroup" xml:space="preserve"><value>Nowa pionowa grupa kart</value></data>
   <data name="Search_MatchCase" xml:space="preserve"><value>Uwzględnij wielkość liter</value></data>
   <data name="Search_UseRegex" xml:space="preserve"><value>Użyj wyrażeń regularnych</value></data>
   <data name="Search_Watermark" xml:space="preserve"><value>Szukaj...</value></data>

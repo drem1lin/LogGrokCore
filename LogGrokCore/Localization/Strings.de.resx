@@ -66,6 +66,13 @@
   <data name="Doc_CopyFilename" xml:space="preserve"><value>Dateinamen kopieren</value></data>
   <data name="Doc_CopyFullPath" xml:space="preserve"><value>Vollständigen Pfad kopieren</value></data>
   <data name="Doc_OpenContainingFolder" xml:space="preserve"><value>Enthaltenden Ordner öffnen</value></data>
+  <data name="Doc_Close" xml:space="preserve"><value>Schließen</value></data>
+  <data name="Doc_CloseAllButThis" xml:space="preserve"><value>Alle außer dieser schließen</value></data>
+  <data name="Doc_CloseAll" xml:space="preserve"><value>Alle schließen</value></data>
+  <data name="Doc_Float" xml:space="preserve"><value>Schwebend</value></data>
+  <data name="Doc_DockAsDocument" xml:space="preserve"><value>Als Dokument andocken</value></data>
+  <data name="Doc_NewHorizontalTabGroup" xml:space="preserve"><value>Neue horizontale Registerkartengruppe</value></data>
+  <data name="Doc_NewVerticalTabGroup" xml:space="preserve"><value>Neue vertikale Registerkartengruppe</value></data>
   <data name="Search_MatchCase" xml:space="preserve"><value>Groß-/Kleinschreibung beachten</value></data>
   <data name="Search_UseRegex" xml:space="preserve"><value>Reguläre Ausdrücke verwenden</value></data>
   <data name="Search_Watermark" xml:space="preserve"><value>Suchen...</value></data>

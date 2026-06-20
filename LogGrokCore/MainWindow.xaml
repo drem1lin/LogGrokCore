@@ -30,11 +30,45 @@
             </ResourceDictionary.MergedDictionaries>
             <th:MetroTheme x:Key="MetroTheme" />
             <localControls:StringShortenerConvereter x:Key="StringShortenerConverter" />
-            <avalonDockExtensions:MenuItemCollection x:Key="AdditionalDocumentMenuItems">
+            <!-- Fully custom, localized document tab context menu. Built-in items bind to
+                 AvalonDock's LayoutItem commands; our items bind through Model.Content (the
+                 document view model). Using {loc:Loc} makes every item follow the selected
+                 UI language at runtime (AvalonDock's own menu only localizes at startup). -->
+            <ContextMenu x:Key="DocumentTabContextMenu">
+                <MenuItem Header="{loc:Loc Doc_Close}" Command="{Binding CloseCommand}">
+                    <MenuItem.Icon>
+                        <iconPacks:PackIconMaterial Kind="Close" Width="14" Height="14" />
+                    </MenuItem.Icon>
+                </MenuItem>
+                <MenuItem Header="{loc:Loc Doc_CloseAllButThis}" Command="{Binding CloseAllButThisCommand}" />
+                <MenuItem Header="{loc:Loc Doc_CloseAll}" Command="{Binding CloseAllCommand}" />
+                <Separator />
+                <MenuItem Header="{loc:Loc Doc_Float}" Command="{Binding FloatCommand}">
+                    <MenuItem.Icon>
+                        <iconPacks:PackIconMaterial Kind="OpenInNew" Width="14" Height="14" />
+                    </MenuItem.Icon>
+                </MenuItem>
+                <MenuItem Header="{loc:Loc Doc_DockAsDocument}" Command="{Binding DockAsDocumentCommand}">
+                    <MenuItem.Icon>
+                        <iconPacks:PackIconMaterial Kind="DockWindow" Width="14" Height="14" />
+                    </MenuItem.Icon>
+                </MenuItem>
+                <Separator />
+                <MenuItem Header="{loc:Loc Doc_NewHorizontalTabGroup}" Command="{Binding NewHorizontalTabGroupCommand}">
+                    <MenuItem.Icon>
+                        <iconPacks:PackIconMaterial Kind="ViewSplitHorizontal" Width="14" Height="14" />
+                    </MenuItem.Icon>
+                </MenuItem>
+                <MenuItem Header="{loc:Loc Doc_NewVerticalTabGroup}" Command="{Binding NewVerticalTabGroupCommand}">
+                    <MenuItem.Icon>
+                        <iconPacks:PackIconMaterial Kind="ViewSplitVertical" Width="14" Height="14" />
+                    </MenuItem.Icon>
+                </MenuItem>
+                <Separator />
                 <MenuItem Header="{loc:Loc Doc_CopyFilename}" Command="{Binding Model.Content.CopyFilenameToClipboardCommand}" />
                 <MenuItem Header="{loc:Loc Doc_CopyFullPath}" Command="{Binding Model.Content.CopyPathToClipboardCommand}" />
                 <MenuItem Header="{loc:Loc Doc_OpenContainingFolder}" Command="{Binding Model.Content.OpenContainingFolderCommand}" />
-            </avalonDockExtensions:MenuItemCollection>
+            </ContextMenu>
         </ResourceDictionary>
     </mahapps:MetroWindow.Resources>
     <mahapps:MetroWindow.LeftWindowCommands>
@@ -108,7 +142,7 @@
                                   avalonDockExtensions:BindingBehavior.DocumentViewTemplate="{StaticResource DocumentTemplate}"
                                   avalonDockExtensions:BindingBehavior.DocumentsSource="{Binding Documents}"
                                   avalonDockExtensions:BindingBehavior.OnDocumentCloseCommand="{Binding OnDocumentCloseCommand}"
-                                  avalonDockExtensions:DocumentContextMenu.AdditionalContextMenuItems="{StaticResource AdditionalDocumentMenuItems}">
+                                  DocumentContextMenu="{StaticResource DocumentTabContextMenu}">
             <DockingManager.LayoutItemContainerStyle>
                 <Style TargetType="{x:Type LayoutItem}">
                     <Setter Property="ToolTip" Value="{Binding Model.Content.Title}" />
