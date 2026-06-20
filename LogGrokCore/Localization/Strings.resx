@@ -89,4 +89,6 @@
   <data name="Marked_Index" xml:space="preserve"><value>INDEX</value></data>
   <data name="Marked_CopyLines" xml:space="preserve"><value>Copy lines</value></data>
   <data name="Marked_Title" xml:space="preserve"><value>Marked lines</value></data>
+  <data name="Config_CorruptedTitle" xml:space="preserve"><value>Cannot load settings</value></data>
+  <data name="Config_CorruptedMessage" xml:space="preserve"><value>The settings file is corrupted and could not be loaded. Check the indentation: use spaces instead of tabs, and align keys at the same level.</value></data>
 </root>

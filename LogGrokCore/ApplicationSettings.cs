@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Text.RegularExpressions;
+using LogGrokCore.Bootstrap;
 using LogGrokCore.Colors.Configuration;
 using LogGrokCore.Controls.ListControls;
 using LogGrokCore.Data;
@@ -135,13 +136,9 @@ namespace LogGrokCore
 
         private static ApplicationSettings Load()
         {
-            var builder = new ConfigurationBuilder()
-                .AddYamlFile(SettingsFileName, true, true);
-
-            var settings = new ApplicationSettings();
-
-            var configuration = builder.Build();
-            configuration.GetSection("Settings").Bind(settings);
+            var settings = BuildFromFile(SettingsFileName,
+                error => ConfigurationLoadFailure.ReportAndExit(SettingsFileName, error),
+                out var configuration);
 
             ChangeToken.OnChange(() => configuration.GetReloadToken(), () =>
             {
@@ -151,6 +148,30 @@ namespace LogGrokCore
                 settings.LogFormats = newSettings.LogFormats;
             });
 
+            return settings;
+        }
+
+        /// <summary>
+        /// Builds settings from a YAML file. A malformed file (e.g. bad YAML indentation
+        /// or tabs) must not crash the process: the load/parse failure is routed to
+        /// <paramref name="onLoadError"/> — both on initial load and on the reload-on-change
+        /// path — instead of throwing. This seam is exposed for testing; production passes a
+        /// handler that shows a localized message and exits.
+        /// </summary>
+        internal static ApplicationSettings BuildFromFile(string path,
+            Action<Exception> onLoadError, out IConfigurationRoot configuration)
+        {
+            var builder = new ConfigurationBuilder().AddYamlFile(path, true, true);
+
+            builder.SetFileLoadExceptionHandler(context =>
+            {
+                context.Ignore = true;
+                onLoadError(context.Exception);
+            });
+
+            var settings = new ApplicationSettings();
+            configuration = builder.Build();
+            configuration.GetSection("Settings").Bind(settings);
             return settings;
         }
 

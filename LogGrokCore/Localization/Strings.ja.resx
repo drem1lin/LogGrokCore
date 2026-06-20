@@ -89,4 +89,6 @@
   <data name="Marked_Index" xml:space="preserve"><value>インデックス</value></data>
   <data name="Marked_CopyLines" xml:space="preserve"><value>行をコピー</value></data>
   <data name="Marked_Title" xml:space="preserve"><value>マークした行</value></data>
+  <data name="Config_CorruptedTitle" xml:space="preserve"><value>設定を読み込めません</value></data>
+  <data name="Config_CorruptedMessage" xml:space="preserve"><value>設定ファイルが破損しているため、読み込めませんでした。インデントを確認してください。タブではなくスペースを使い、キーを同じ階層に揃えてください。</value></data>
 </root>

@@ -89,4 +89,6 @@
   <data name="Marked_Index" xml:space="preserve"><value>INDEKS</value></data>
   <data name="Marked_CopyLines" xml:space="preserve"><value>Kopiuj wiersze</value></data>
   <data name="Marked_Title" xml:space="preserve"><value>Zaznaczone wiersze</value></data>
+  <data name="Config_CorruptedTitle" xml:space="preserve"><value>Nie można wczytać ustawień</value></data>
+  <data name="Config_CorruptedMessage" xml:space="preserve"><value>Plik konfiguracji jest uszkodzony i nie można go wczytać. Sprawdź wcięcia: używaj spacji zamiast tabulatorów i wyrównaj klucze na tym samym poziomie.</value></data>
 </root>

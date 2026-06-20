@@ -89,4 +89,6 @@
   <data name="Marked_Index" xml:space="preserve"><value>INDEX</value></data>
   <data name="Marked_CopyLines" xml:space="preserve"><value>Zeilen kopieren</value></data>
   <data name="Marked_Title" xml:space="preserve"><value>Markierte Zeilen</value></data>
+  <data name="Config_CorruptedTitle" xml:space="preserve"><value>Einstellungen können nicht geladen werden</value></data>
+  <data name="Config_CorruptedMessage" xml:space="preserve"><value>Die Einstellungsdatei ist beschädigt und konnte nicht geladen werden. Überprüfen Sie die Einrückung: Verwenden Sie Leerzeichen statt Tabulatoren und richten Sie die Schlüssel auf derselben Ebene aus.</value></data>
 </root>

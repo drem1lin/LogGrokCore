@@ -40,6 +40,23 @@ namespace LogGrokCore.Localization
         public string this[string key] =>
             _resourceManager.GetString(key, _currentCulture) ?? key;
 
+        /// <summary>
+        /// Returns <paramref name="key"/> translated into every available language.
+        /// Used for startup errors shown before a language can be chosen (e.g. the
+        /// settings file that holds the language preference failed to load), so the
+        /// message is readable regardless of the user's language.
+        /// </summary>
+        public IEnumerable<(LanguageInfo Language, string Text)> GetAllTranslations(string key)
+        {
+            foreach (var language in AvailableLanguages)
+            {
+                var culture = language.Code == "en"
+                    ? CultureInfo.InvariantCulture
+                    : CultureInfo.GetCultureInfo(language.Code);
+                yield return (language, _resourceManager.GetString(key, culture) ?? key);
+            }
+        }
+
         public CultureInfo CurrentCulture
         {
             get => _currentCulture;

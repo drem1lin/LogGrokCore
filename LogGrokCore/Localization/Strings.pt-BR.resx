@@ -89,4 +89,6 @@
   <data name="Marked_Index" xml:space="preserve"><value>ÍNDICE</value></data>
   <data name="Marked_CopyLines" xml:space="preserve"><value>Copiar linhas</value></data>
   <data name="Marked_Title" xml:space="preserve"><value>Linhas marcadas</value></data>
+  <data name="Config_CorruptedTitle" xml:space="preserve"><value>Não foi possível carregar as configurações</value></data>
+  <data name="Config_CorruptedMessage" xml:space="preserve"><value>O arquivo de configuração está corrompido e não pôde ser carregado. Verifique a indentação: use espaços em vez de tabulações e alinhe as chaves no mesmo nível.</value></data>
 </root>

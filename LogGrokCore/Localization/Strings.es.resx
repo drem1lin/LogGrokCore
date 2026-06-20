@@ -89,4 +89,6 @@
   <data name="Marked_Index" xml:space="preserve"><value>ÍNDICE</value></data>
   <data name="Marked_CopyLines" xml:space="preserve"><value>Copiar líneas</value></data>
   <data name="Marked_Title" xml:space="preserve"><value>Líneas marcadas</value></data>
+  <data name="Config_CorruptedTitle" xml:space="preserve"><value>No se puede cargar la configuración</value></data>
+  <data name="Config_CorruptedMessage" xml:space="preserve"><value>El archivo de configuración está dañado y no se pudo cargar. Compruebe la sangría: use espacios en lugar de tabulaciones y alinee las claves al mismo nivel.</value></data>
 </root>
