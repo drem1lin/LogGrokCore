@@ -26,7 +26,7 @@ namespace LogGrokCore.MarkedLines
         // The shared AvalonDock LayoutItem style (intended for document panes) binds
         // Model.Content.Title / .IsCurrentDocument; expose them here so those bindings
         // resolve for the Marked Lines anchorable instead of logging path errors.
-        public string Title => "Marked lines";
+        public string Title => Localization.TranslationSource.Instance["Marked_Title"];
 
         public bool IsCurrentDocument => false;
 
@@ -39,6 +39,11 @@ namespace LogGrokCore.MarkedLines
         public MarkedLinesViewModel(ObservableCollection<DocumentViewModel> documents)
         {
             _documents = documents;
+
+            // Title is read from resources, so refresh it when the UI language changes.
+            Localization.TranslationSource.Instance.PropertyChanged +=
+                (_, _) => InvokePropertyChanged(nameof(Title));
+
             SubscribeToNewDocumentChanges(_documents);
 
             _documents.CollectionChanged += (_, _) =>

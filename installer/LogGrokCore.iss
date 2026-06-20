@@ -1,4 +1,4 @@
-#define MyAppName "LogGrokCore"
+﻿#define MyAppName "LogGrokCore"
 #define MyAppPublisher "LogGrokCore"
 #define MyAppURL "https://github.com/drem1lin/LogGrokCore"
 #define MyAppExeName "LogGrokCore.exe"
@@ -26,11 +26,17 @@ PrivilegesRequiredOverridesAllowed=dialog
 [Languages]
 Name: "english"; MessagesFile: "compiler:Default.isl"
 Name: "russian"; MessagesFile: "compiler:Languages\Russian.isl"
+Name: "german"; MessagesFile: "compiler:Languages\German.isl"
+Name: "french"; MessagesFile: "compiler:Languages\French.isl"
+Name: "spanish"; MessagesFile: "compiler:Languages\Spanish.isl"
+Name: "japanese"; MessagesFile: "compiler:Languages\Japanese.isl"
+Name: "polish"; MessagesFile: "compiler:Languages\Polish.isl"
+Name: "brazilianportuguese"; MessagesFile: "compiler:Languages\BrazilianPortuguese.isl"
 
 [Tasks]
 Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked
-Name: "fileassoc_log"; Description: "Associate with .log files"; GroupDescription: "File associations:"
-Name: "fileassoc_txt"; Description: "Associate with .txt files"; GroupDescription: "File associations:"; Flags: unchecked
+Name: "fileassoc_log"; Description: "{cm:AssocLog}"; GroupDescription: "{cm:FileAssoc}"
+Name: "fileassoc_txt"; Description: "{cm:AssocTxt}"; GroupDescription: "{cm:FileAssoc}"; Flags: unchecked
 
 [Files]
 Source: "publish\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
@@ -52,3 +58,29 @@ Root: HKA; Subkey: "Software\Classes\LogGrokCore.txt\shell\open\command"; ValueT
 
 [Run]
 Filename: "{app}\{#MyAppExeName}"; Description: "{cm:LaunchProgram,{#StringChange(MyAppName, '&', '&&')}}"; Flags: nowait postinstall skipifsilent
+
+[CustomMessages]
+english.FileAssoc=File associations:
+english.AssocLog=Associate with .log files
+english.AssocTxt=Associate with .txt files
+russian.FileAssoc=Ассоциации файлов:
+russian.AssocLog=Связать с файлами .log
+russian.AssocTxt=Связать с файлами .txt
+german.FileAssoc=Dateizuordnungen:
+german.AssocLog=Mit .log-Dateien verknüpfen
+german.AssocTxt=Mit .txt-Dateien verknüpfen
+french.FileAssoc=Associations de fichiers :
+french.AssocLog=Associer aux fichiers .log
+french.AssocTxt=Associer aux fichiers .txt
+spanish.FileAssoc=Asociaciones de archivos:
+spanish.AssocLog=Asociar con archivos .log
+spanish.AssocTxt=Asociar con archivos .txt
+japanese.FileAssoc=ファイルの関連付け:
+japanese.AssocLog=.log ファイルに関連付ける
+japanese.AssocTxt=.txt ファイルに関連付ける
+polish.FileAssoc=Skojarzenia plików:
+polish.AssocLog=Skojarz z plikami .log
+polish.AssocTxt=Skojarz z plikami .txt
+brazilianportuguese.FileAssoc=Associações de arquivos:
+brazilianportuguese.AssocLog=Associar a arquivos .log
+brazilianportuguese.AssocTxt=Associar a arquivos .txt

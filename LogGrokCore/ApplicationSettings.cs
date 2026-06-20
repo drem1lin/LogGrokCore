@@ -19,6 +19,9 @@ namespace LogGrokCore
 
         public DebugSettings DebugSettings { get; set; } = new();
 
+        /// <summary>UI language code (e.g. "en", "ru", "pt-BR"). Defaults to English.</summary>
+        public string Language { get; set; } = "en";
+
         public ColorSettings ColorSettings { get; private set; } = new();
 
         public ViewSettings ViewSettings { get; private set; } = new();
@@ -79,6 +82,54 @@ namespace LogGrokCore
             catch (Exception ex)
             {
                 Trace.TraceWarning($"Failed to persist EnableCrashDumps: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// Persists the selected UI language back to appsettings.yaml. Updates the existing
+        /// "Language:" line if present, otherwise inserts one right after "Settings:".
+        /// Best-effort: failures are logged, not thrown.
+        /// </summary>
+        public static void SetLanguage(string languageCode)
+        {
+            Instance().Language = languageCode;
+
+            try
+            {
+                var path = SettingsFileName;
+                if (!File.Exists(path))
+                    return;
+
+                var lines = File.ReadAllLines(path);
+                var languageRegex = new Regex(@"^(\s*Language\s*:\s*).*$", RegexOptions.IgnoreCase);
+                for (var i = 0; i < lines.Length; i++)
+                {
+                    if (!languageRegex.IsMatch(lines[i]))
+                        continue;
+
+                    lines[i] = languageRegex.Replace(lines[i], "$1" + languageCode);
+                    File.WriteAllLines(path, lines);
+                    return;
+                }
+
+                // No existing line: add one directly under the top-level "Settings:" node.
+                var settingsRegex = new Regex(@"^\s*Settings\s*:\s*$", RegexOptions.IgnoreCase);
+                for (var i = 0; i < lines.Length; i++)
+                {
+                    if (!settingsRegex.IsMatch(lines[i]))
+                        continue;
+
+                    var newLines = new List<string>(lines);
+                    newLines.Insert(i + 1, $"  Language: {languageCode}");
+                    File.WriteAllLines(path, newLines);
+                    return;
+                }
+
+                Trace.TraceWarning("Settings node not found in appsettings.yaml; language not persisted.");
+            }
+            catch (Exception ex)
+            {
+                Trace.TraceWarning($"Failed to persist Language: {ex.Message}");
             }
         }
 

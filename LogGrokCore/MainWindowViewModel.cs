@@ -10,6 +10,7 @@ using System.Windows.Input;
 using LogGrokCore.AvalonDockExtensions;
 using LogGrokCore.Data;
 using LogGrokCore.Diagnostics;
+using LogGrokCore.Localization;
 using LogGrokCore.MarkedLines;
 using LogGrokCore.Search;
 using Microsoft.Win32;
@@ -50,6 +51,8 @@ namespace LogGrokCore
             {
                 OpenExternalFile(ApplicationSettings.SettingsFileName);
             });
+
+            Languages = BuildLanguageMenu(_applicationSettings.Language);
 
             // Reflect the persisted state and apply verbose logging if it was left enabled.
             _isDebugLoggingEnabled = _applicationSettings.DebugSettings.EnableCrashDumps;
@@ -112,6 +115,36 @@ namespace LogGrokCore
         }
 
         public ICommand OpenSettings { get; }
+
+        /// <summary>Entries for the Language submenu, with live "current language" checkmarks.</summary>
+        public ObservableCollection<LanguageViewModel> Languages { get; }
+
+        private ObservableCollection<LanguageViewModel> BuildLanguageMenu(string currentCode)
+        {
+            var languages = new ObservableCollection<LanguageViewModel>();
+            var selectCommand = DelegateCommand.Create<string>(SelectLanguage);
+            foreach (var info in TranslationSource.AvailableLanguages)
+            {
+                languages.Add(new LanguageViewModel(info, selectCommand)
+                {
+                    IsSelected = string.Equals(info.Code, currentCode,
+                        StringComparison.OrdinalIgnoreCase)
+                });
+            }
+
+            return languages;
+        }
+
+        private void SelectLanguage(string code)
+        {
+            var appliedCode = TranslationSource.Instance.SetCulture(code);
+
+            foreach (var language in Languages)
+                language.IsSelected =
+                    string.Equals(language.Code, appliedCode, StringComparison.OrdinalIgnoreCase);
+
+            ApplicationSettings.SetLanguage(appliedCode);
+        }
 
         public ICommand ExitCommand => new DelegateCommand(() => Application.Current.Shutdown());
 

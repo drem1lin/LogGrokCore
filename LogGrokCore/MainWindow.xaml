@@ -9,6 +9,7 @@
                      xmlns:th="clr-namespace:AvalonDock.Themes;assembly=AvalonDock.Themes.Metro"
                      xmlns:iconPacks="http://metro.mahapps.com/winfx/xaml/iconpacks"
                      xmlns:avalonDockExtensions="clr-namespace:LogGrokCore.AvalonDockExtensions"
+                     xmlns:loc="clr-namespace:LogGrokCore.Localization"
                      d:DataContext="{d:DesignInstance Type=local:MainWindowViewModel, IsDesignTimeCreatable=False}"
                      localControls:DragnDropBehavior.AllowDrop="True"
                      localControls:DragnDropBehavior.DropCommand="{Binding DropCommand}"
@@ -30,9 +31,9 @@
             <th:MetroTheme x:Key="MetroTheme" />
             <localControls:StringShortenerConvereter x:Key="StringShortenerConverter" />
             <avalonDockExtensions:MenuItemCollection x:Key="AdditionalDocumentMenuItems">
-                <MenuItem Header="Copy Filename" Command="{Binding Model.Content.CopyFilenameToClipboardCommand}" />
-                <MenuItem Header="Copy Full Path" Command="{Binding Model.Content.CopyPathToClipboardCommand}" />
-                <MenuItem Header="Open Containing Folder" Command="{Binding Model.Content.OpenContainingFolderCommand}" />
+                <MenuItem Header="{loc:Loc Doc_CopyFilename}" Command="{Binding Model.Content.CopyFilenameToClipboardCommand}" />
+                <MenuItem Header="{loc:Loc Doc_CopyFullPath}" Command="{Binding Model.Content.CopyPathToClipboardCommand}" />
+                <MenuItem Header="{loc:Loc Doc_OpenContainingFolder}" Command="{Binding Model.Content.OpenContainingFolderCommand}" />
             </avalonDockExtensions:MenuItemCollection>
         </ResourceDictionary>
     </mahapps:MetroWindow.Resources>
@@ -45,13 +46,25 @@
                         <iconPacks:PackIconMaterial  Kind="Menu" Foreground="Azure" Background="Transparent"/>
                         </DataTemplate>
                     </MenuItem.HeaderTemplate>
-                    <MenuItem Command="{Binding OpenFileCommand}" Header="Open" />
+                    <MenuItem Command="{Binding OpenFileCommand}" Header="{loc:Loc Menu_Open}" />
                     <Separator />
-                    <MenuItem Header="Debug logging &amp; crash dumps"
+                    <MenuItem Header="{loc:Loc Menu_Language}" ItemsSource="{Binding Languages}">
+                        <MenuItem.ItemContainerStyle>
+                            <Style TargetType="MenuItem">
+                                <Setter Property="Header" Value="{Binding DisplayName}" />
+                                <Setter Property="Command" Value="{Binding SelectCommand}" />
+                                <Setter Property="CommandParameter" Value="{Binding Code}" />
+                                <Setter Property="IsCheckable" Value="True" />
+                                <Setter Property="IsChecked" Value="{Binding IsSelected, Mode=OneWay}" />
+                            </Style>
+                        </MenuItem.ItemContainerStyle>
+                    </MenuItem>
+                    <Separator />
+                    <MenuItem Header="{loc:Loc Menu_DebugLogging}"
                               IsCheckable="True"
                               IsChecked="{Binding IsDebugLoggingEnabled, Mode=TwoWay}" />
                     <Separator />
-                    <MenuItem Command="{Binding ExitCommand}" Header="Exit" />
+                    <MenuItem Command="{Binding ExitCommand}" Header="{loc:Loc Menu_Exit}" />
                 </MenuItem>
             </Menu>
         </mahapps:WindowCommands>
@@ -70,7 +83,7 @@
                     </Rectangle>
                     <TextBlock Margin="4 0 0 0"
                                VerticalAlignment="Center"
-                               Text="settings" />
+                               Text="{loc:Loc Menu_Settings}" />
                 </StackPanel>
             </Button>
         </mahapps:WindowCommands>

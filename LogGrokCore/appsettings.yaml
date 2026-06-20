@@ -1,4 +1,7 @@
 Settings:
+  # UI language: en, ru, de, es, fr, pt-BR, ja, pl
+  Language: en
+
   DebugSettings:
     # Restart required after changing debug settings
     EnableCrashDumps: false

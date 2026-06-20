@@ -3,6 +3,7 @@
                     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
                     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
                     xmlns:logGrokCore="clr-namespace:LogGrokCore"
+                    xmlns:loc="clr-namespace:LogGrokCore.Localization"
                     xmlns:localControls="clr-namespace:LogGrokCore.Controls"
                     xmlns:iconPacks="http://metro.mahapps.com/winfx/xaml/iconpacks"
                     xmlns:listControls="clr-namespace:LogGrokCore.Controls.ListControls"
@@ -36,6 +37,7 @@
         x:Key="LogViewContextMenu"
         DataContext="{Binding PlacementTarget.Tag, RelativeSource={RelativeSource Self}}">
         <MenuItem Command="logGrokCore:RoutedCommands.CopyToClipboard"
+                  Header="{loc:Loc Context_Copy}"
                   Visibility="{Binding RelativeSource={RelativeSource Self},
                                               Path=IsEnabled,
                                               Converter={StaticResource BooleanToVisibilityConverter}}">
@@ -47,7 +49,7 @@
             </MenuItem.Icon>
         </MenuItem>
         <MenuItem Command="logGrokCore:RoutedCommands.CopyToClipboardFormatted"
-                  Header="Copy (formatted JSON)"
+                  Header="{loc:Loc Context_CopyFormattedJson}"
                   InputGestureText="Ctrl+Shift+C"
                   Visibility="{Binding RelativeSource={RelativeSource Self},
                                               Path=IsEnabled,
@@ -60,7 +62,7 @@
             </MenuItem.Icon>
         </MenuItem>
         <MenuItem Command="logGrokCore:RoutedCommands.ToggleMarks"
-                  Header="Toggle marks"
+                  Header="{loc:Loc Context_ToggleMarks}"
                   Visibility="{Binding RelativeSource={RelativeSource Self},
                                               Path=IsEnabled,
                                               Converter={StaticResource BooleanToVisibilityConverter}}">
@@ -72,16 +74,20 @@
             </MenuItem.Icon>
         </MenuItem>
         <MenuItem Command="logGrokCore:RoutedCommands.SearchText"
-                  Header="{Binding PlacementTarget.SelectedText,
-                            Converter={localControls:FormatText},
-                            ConverterParameter='Search \'{0}\'',
-                            RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ContextMenu}}}"
                             CommandParameter="{Binding PlacementTarget.SelectedText,
                             RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ContextMenu}}}"
 
                   Visibility="{Binding RelativeSource={RelativeSource Self},
                                               Path=IsEnabled,
                                               Converter={StaticResource BooleanToVisibilityConverter}}">
+            <MenuItem.Header>
+                <MultiBinding Converter="{localControls:FormatTextMulti}">
+                    <Binding Path="PlacementTarget.SelectedText"
+                             RelativeSource="{RelativeSource FindAncestor, AncestorType={x:Type ContextMenu}}" />
+                    <Binding Path="[Context_SearchSelection]"
+                             Source="{x:Static loc:TranslationSource.Instance}" />
+                </MultiBinding>
+            </MenuItem.Header>
             <MenuItem.Icon>
                 <iconPacks:PackIconMaterial
                     VerticalAlignment="Center"
@@ -89,7 +95,7 @@
                     Kind="Magnify" />
             </MenuItem.Icon>
         </MenuItem>
-        <MenuItem Header="Exclude" Style="{StaticResource FilterContextMenuItem}"
+        <MenuItem Header="{loc:Loc Context_Exclude}" Style="{StaticResource FilterContextMenuItem}"
                   DataContext="{Binding DataContext}"
                   d:DataContext="{d:DesignInstance Type={x:Type logGrokCore:LogViewModel}, IsDesignTimeCreatable=False}">
             <MenuItem.ItemsSource>
@@ -107,7 +113,7 @@
                     Kind="FilterMinusOutline" />
             </MenuItem.Icon>
         </MenuItem>
-        <MenuItem Header="Exclude All But" Style="{StaticResource FilterContextMenuItem}"
+        <MenuItem Header="{loc:Loc Context_ExcludeAllBut}" Style="{StaticResource FilterContextMenuItem}"
                   DataContext="{Binding DataContext}"
                   d:DataContext="{d:DesignInstance Type={x:Type logGrokCore:LogViewModel}, IsDesignTimeCreatable=False}">
             <MenuItem.ItemsSource>
@@ -126,6 +132,7 @@
             </MenuItem.Icon>
         </MenuItem>
         <MenuItem Command="{x:Static logGrokCore:RoutedCommands.ClearFilters}"
+                  Header="{loc:Loc Context_ClearFilters}"
                   Visibility="{Binding RelativeSource={RelativeSource Self},
                                               Path=IsEnabled,
                                               Converter={StaticResource BooleanToVisibilityConverter}}">
@@ -136,18 +143,18 @@
                     Kind="FilterRemoveOutline" />
             </MenuItem.Icon>
         </MenuItem>
-        <MenuItem Header="Folding"
-                  DataContext="{Binding PlacementTarget.FoldingManager, 
+        <MenuItem Header="{loc:Loc Context_Folding}"
+                  DataContext="{Binding PlacementTarget.FoldingManager,
                             RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ContextMenu}}}"
-              Visibility="{Binding  
-                            Converter={StaticResource IsNullToVisibilityConverter}, 
+              Visibility="{Binding
+                            Converter={StaticResource IsNullToVisibilityConverter},
                             FallbackValue={x:Static Visibility.Collapsed}}">
-            <MenuItem Header="Expand recursively" Command="{Binding ExpandRecursivelyCommand}"/>
-            <MenuItem Header="Collapse recursively" Command="{Binding CollapseRecursivelyCommand}"/>
-            <MenuItem Header="Reset to default" Command="{Binding ResetToDefaultCommand}"/>
-            <MenuItem Header="Expand All" Command="{Binding ExpandAllCommand}"/>
-            <MenuItem Header="Collapse All" Command="{Binding CollapseAllCommand}"/>
-            <MenuItem Header="Reset All" Command="{Binding ResetAllToDefaultCommand}"/>
+            <MenuItem Header="{loc:Loc Context_ExpandRecursively}" Command="{Binding ExpandRecursivelyCommand}"/>
+            <MenuItem Header="{loc:Loc Context_CollapseRecursively}" Command="{Binding CollapseRecursivelyCommand}"/>
+            <MenuItem Header="{loc:Loc Context_ResetToDefault}" Command="{Binding ResetToDefaultCommand}"/>
+            <MenuItem Header="{loc:Loc Context_ExpandAll}" Command="{Binding ExpandAllCommand}"/>
+            <MenuItem Header="{loc:Loc Context_CollapseAll}" Command="{Binding CollapseAllCommand}"/>
+            <MenuItem Header="{loc:Loc Context_ResetAll}" Command="{Binding ResetAllToDefaultCommand}"/>
         </MenuItem>
     </ContextMenu>
 </ResourceDictionary>

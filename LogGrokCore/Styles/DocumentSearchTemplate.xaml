@@ -10,6 +10,7 @@
                     xmlns:behaviors="clr-namespace:WPFTextBoxAutoComplete;assembly=WPFTextBoxAutoComplete"
                     xmlns:textRender="clr-namespace:LogGrokCore.Controls.TextRender"
                     xmlns:avalonDockExtensions="clr-namespace:LogGrokCore.AvalonDockExtensions"
+                    xmlns:loc="clr-namespace:LogGrokCore.Localization"
                     mc:Ignorable="d">
     <ResourceDictionary.MergedDictionaries>
         <ResourceDictionary Source="ListViewItemStyle.xaml" />
@@ -90,7 +91,7 @@
                           BorderThickness="0"
                           IsChecked="{Binding IsCaseSensitive}"
                           Style="{StaticResource SearchOptionToggleButtonStyle}"
-                          ToolTip="Match case">
+                          ToolTip="{loc:Loc Search_MatchCase}">
                 <TextBlock HorizontalAlignment="Center"
                            VerticalAlignment="Center"
                            FontStretch="SemiCondensed"
@@ -105,7 +106,7 @@
                           BorderThickness="0"
                           IsChecked="{Binding UseRegex}"
                           Style="{StaticResource SearchOptionToggleButtonStyle}"
-                          ToolTip="Use Regular Expressions">
+                          ToolTip="{loc:Loc Search_UseRegex}">
                 <TextBlock HorizontalAlignment="Center"
                            VerticalAlignment="Center"
                            FontStretch="SemiCondensed"
@@ -123,7 +124,7 @@
                      mahapps:TextBoxHelper.ButtonCommand="{Binding ClearSearchCommand,
                                                                                              Mode=OneWay}"
                      mahapps:TextBoxHelper.SelectAllOnFocus="True"
-                     mahapps:TextBoxHelper.Watermark="Search..."
+                     mahapps:TextBoxHelper.Watermark="{loc:Loc Search_Watermark}"
                      controls:SetFocusBehavior.SetFocusRequest="{Binding SetFocusRequest}"
                      behaviors:AutoCompleteBehavior.AutoCompleteItemsSource="{Binding AutoCompleteList, Mode=OneWay}"
                      behaviors:AutoCompleteBehavior.AutoCompleteStringComparison="InvariantCultureIgnoreCase">

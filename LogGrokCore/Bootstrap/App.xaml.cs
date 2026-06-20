@@ -19,9 +19,11 @@ namespace LogGrokCore.Bootstrap
         private readonly Container _container;
         public App()
         {
-#if DEBUG
-            CultureInfo.CurrentUICulture = CultureInfo.InvariantCulture;
-#endif
+            // Apply the persisted UI language before any window is created so the first
+            // render is already localized.
+            LogGrokCore.Localization.TranslationSource.Instance.SetCulture(
+                ApplicationSettings.Instance().Language);
+
             TracesLogger.Initialize();
             ExceptionsLogger.Initialize();
             Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);

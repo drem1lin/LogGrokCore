@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="Menu_Open" xml:space="preserve"><value>Открыть</value></data>
+  <data name="Menu_DebugLogging" xml:space="preserve"><value>Отладочное логирование и аварийные дампы</value></data>
+  <data name="Menu_Exit" xml:space="preserve"><value>Выход</value></data>
+  <data name="Menu_Settings" xml:space="preserve"><value>настройки</value></data>
+  <data name="Menu_Language" xml:space="preserve"><value>Язык</value></data>
+  <data name="Doc_CopyFilename" xml:space="preserve"><value>Копировать имя файла</value></data>
+  <data name="Doc_CopyFullPath" xml:space="preserve"><value>Копировать полный путь</value></data>
+  <data name="Doc_OpenContainingFolder" xml:space="preserve"><value>Открыть папку с файлом</value></data>
+  <data name="Search_MatchCase" xml:space="preserve"><value>Учитывать регистр</value></data>
+  <data name="Search_UseRegex" xml:space="preserve"><value>Использовать регулярные выражения</value></data>
+  <data name="Search_Watermark" xml:space="preserve"><value>Поиск...</value></data>
+  <data name="Filter_SelectAll" xml:space="preserve"><value>Выбрать все</value></data>
+  <data name="Filter_DeselectAll" xml:space="preserve"><value>Снять выделение</value></data>
+  <data name="Filter_SelectOnlySearchResults" xml:space="preserve"><value>Выбрать только результаты поиска</value></data>
+  <data name="Context_Copy" xml:space="preserve"><value>Копировать</value></data>
+  <data name="Context_CopyFormattedJson" xml:space="preserve"><value>Копировать (форматированный JSON)</value></data>
+  <data name="Context_ToggleMarks" xml:space="preserve"><value>Переключить метки</value></data>
+  <data name="Context_SearchSelection" xml:space="preserve"><value>Искать «{0}»</value></data>
+  <data name="Context_Exclude" xml:space="preserve"><value>Исключить</value></data>
+  <data name="Context_ExcludeAllBut" xml:space="preserve"><value>Исключить все, кроме</value></data>
+  <data name="Context_ClearFilters" xml:space="preserve"><value>Очистить фильтры</value></data>
+  <data name="Context_Folding" xml:space="preserve"><value>Сворачивание</value></data>
+  <data name="Context_ExpandRecursively" xml:space="preserve"><value>Развернуть рекурсивно</value></data>
+  <data name="Context_CollapseRecursively" xml:space="preserve"><value>Свернуть рекурсивно</value></data>
+  <data name="Context_ResetToDefault" xml:space="preserve"><value>Сбросить по умолчанию</value></data>
+  <data name="Context_ExpandAll" xml:space="preserve"><value>Развернуть все</value></data>
+  <data name="Context_CollapseAll" xml:space="preserve"><value>Свернуть все</value></data>
+  <data name="Context_ResetAll" xml:space="preserve"><value>Сбросить все</value></data>
+  <data name="Marked_Index" xml:space="preserve"><value>ИНДЕКС</value></data>
+  <data name="Marked_CopyLines" xml:space="preserve"><value>Копировать строки</value></data>
+  <data name="Marked_Title" xml:space="preserve"><value>Закреплённые строки</value></data>
+</root>

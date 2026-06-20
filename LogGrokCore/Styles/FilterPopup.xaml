@@ -5,6 +5,7 @@
                     xmlns:filterPopup="clr-namespace:LogGrokCore.Controls.FilterPopup"
                     xmlns:local="clr-namespace:LogGrokCore.Filter"
                     xmlns:logGrokCore="clr-namespace:LogGrokCore"
+                    xmlns:loc="clr-namespace:LogGrokCore.Localization"
                     xmlns:controls="clr-namespace:LogGrokCore.Controls">
     <ResourceDictionary.MergedDictionaries>
         <ResourceDictionary Source="pack://application:,,,/MahApps.Metro;component/styles/controls.xaml" />
@@ -67,7 +68,7 @@
                                                 Source={x:Static filterPopup:TextBoxCommands.Clear}}"
                                      mah:TextBoxHelper.ButtonCommandParameter="{Binding ElementName=FilterTextBox}"
                                      mah:TextBoxHelper.SelectAllOnFocus="True"
-                                     mah:TextBoxHelper.Watermark="Search...">
+                                     mah:TextBoxHelper.Watermark="{loc:Loc Search_Watermark}">
                                 <TextBox.InputBindings>
                                     <KeyBinding Key="Escape"
                                                 Command="{x:Static logGrokCore:RoutedCommands.Cancel}"
@@ -94,14 +95,14 @@
                                     Command="{Binding SelectAllCommand}"
                                     CommandParameter="{Binding Items,
                                                                        ElementName=ListBox}"
-                                    Content="Select All" />
+                                    Content="{loc:Loc Filter_SelectAll}" />
                             <Button Grid.Row="1"
                                     Grid.Column="1"
                                     Margin="10, 10, 5, 0"
                                     Command="{Binding DeselectAllCommand}"
                                     CommandParameter="{Binding Items,
                                                                        ElementName=ListBox}"
-                                    Content="Deselect All" />
+                                    Content="{loc:Loc Filter_DeselectAll}" />
                             <Button Grid.Row="2"
                                     Grid.Column="0"
                                     Grid.ColumnSpan="2"
@@ -109,7 +110,7 @@
                                     Command="{Binding SelectOnlySearchResultsCommand}"
                                     CommandParameter="{Binding Items,
                                                                        ElementName=ListBox}"
-                                    Content="Select Only Search Results" />
+                                    Content="{loc:Loc Filter_SelectOnlySearchResults}" />
                             <ListBox x:Name="ListBox"
                                      Grid.Column="0"
                                      Grid.Row="3"

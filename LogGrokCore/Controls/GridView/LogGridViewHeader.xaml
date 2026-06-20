@@ -57,7 +57,7 @@
         </ToggleButton>
 
         <TextBlock VerticalAlignment="Center"
-                   Text="{Binding Path=FieldHeader, 
+                   Text="{Binding Path=FieldHeader,
                    Converter={StaticResource ToUpperConverter}}"
                    FontWeight="SemiBold" MinWidth="36"
                    Width="Auto"/>

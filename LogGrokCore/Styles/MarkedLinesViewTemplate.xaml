@@ -8,6 +8,7 @@
                     xmlns:iconPacks="http://metro.mahapps.com/winfx/xaml/iconpacks"
                     xmlns:listControls="clr-namespace:LogGrokCore.Controls.ListControls"
                     xmlns:textRender="clr-namespace:LogGrokCore.Controls.TextRender"
+                    xmlns:loc="clr-namespace:LogGrokCore.Localization"
                     mc:Ignorable="d">
     <ResourceDictionary.MergedDictionaries>
         <ResourceDictionary Source="pack://application:,,,/MahApps.Metro;component/styles/controls.xaml" />
@@ -65,7 +66,7 @@
                                 </DataTemplate>
                             </GridViewColumn.CellTemplate>
                         </GridViewColumn>
-                        <GridViewColumn Header="INDEX">
+                        <GridViewColumn Header="{loc:Loc Marked_Index}">
                             <GridViewColumn.CellTemplate>
                                 <DataTemplate DataType="markedLines:MarkedLineViewModel">
                                     <ContentControl ContentTemplate="{StaticResource MarkedLineCellTemplate}"
@@ -117,7 +118,7 @@
                                                                     VerticalAlignment="Center"
                                                                     HorizontalAlignment="Center"
                                                                     Kind="ContentCopy" />
-                                                                <TextBlock Text="Copy lines" />
+                                                                <TextBlock Text="{loc:Loc Marked_CopyLines}" />
                                                             </StackPanel>
                                                         </Button>
                                                     </StackPanel>
