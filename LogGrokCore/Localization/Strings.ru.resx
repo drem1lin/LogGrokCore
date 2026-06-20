@@ -91,4 +91,12 @@
   <data name="Marked_Title" xml:space="preserve"><value>Закреплённые строки</value></data>
   <data name="Config_CorruptedTitle" xml:space="preserve"><value>Не удалось загрузить настройки</value></data>
   <data name="Config_CorruptedMessage" xml:space="preserve"><value>Файл настроек повреждён и не может быть загружен. Проверьте отступы: используйте пробелы вместо табуляции и выравнивайте ключи на одном уровне.</value></data>
+  <data name="Menu_About" xml:space="preserve"><value>О программе</value></data>
+  <data name="About_Title" xml:space="preserve"><value>О программе</value></data>
+  <data name="About_Version" xml:space="preserve"><value>Версия</value></data>
+  <data name="Migration_ResetTitle" xml:space="preserve"><value>Обновление настроек</value></data>
+  <data name="Migration_ResetMessage" xml:space="preserve"><value>Сбросить настройки на значения по умолчанию?
+
+Да — использовать новые настройки по умолчанию.
+Нет — сохранить текущие настройки.</value></data>
 </root>

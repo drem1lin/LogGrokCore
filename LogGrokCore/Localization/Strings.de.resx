@@ -91,4 +91,12 @@
   <data name="Marked_Title" xml:space="preserve"><value>Markierte Zeilen</value></data>
   <data name="Config_CorruptedTitle" xml:space="preserve"><value>Einstellungen können nicht geladen werden</value></data>
   <data name="Config_CorruptedMessage" xml:space="preserve"><value>Die Einstellungsdatei ist beschädigt und konnte nicht geladen werden. Überprüfen Sie die Einrückung: Verwenden Sie Leerzeichen statt Tabulatoren und richten Sie die Schlüssel auf derselben Ebene aus.</value></data>
+  <data name="Menu_About" xml:space="preserve"><value>Über</value></data>
+  <data name="About_Title" xml:space="preserve"><value>Über</value></data>
+  <data name="About_Version" xml:space="preserve"><value>Version</value></data>
+  <data name="Migration_ResetTitle" xml:space="preserve"><value>Einstellungen aktualisieren</value></data>
+  <data name="Migration_ResetMessage" xml:space="preserve"><value>Einstellungen auf Standardwerte zurücksetzen?
+
+Ja – neue Standardeinstellungen verwenden.
+Nein – aktuelle Einstellungen beibehalten.</value></data>
 </root>

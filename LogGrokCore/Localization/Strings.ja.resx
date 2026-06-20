@@ -91,4 +91,12 @@
   <data name="Marked_Title" xml:space="preserve"><value>マークした行</value></data>
   <data name="Config_CorruptedTitle" xml:space="preserve"><value>設定を読み込めません</value></data>
   <data name="Config_CorruptedMessage" xml:space="preserve"><value>設定ファイルが破損しているため、読み込めませんでした。インデントを確認してください。タブではなくスペースを使い、キーを同じ階層に揃えてください。</value></data>
+  <data name="Menu_About" xml:space="preserve"><value>バージョン情報</value></data>
+  <data name="About_Title" xml:space="preserve"><value>バージョン情報</value></data>
+  <data name="About_Version" xml:space="preserve"><value>バージョン</value></data>
+  <data name="Migration_ResetTitle" xml:space="preserve"><value>設定の更新</value></data>
+  <data name="Migration_ResetMessage" xml:space="preserve"><value>設定を既定値にリセットしますか？
+
+はい — 新しい既定の設定を使用します。
+いいえ — 現在の設定を保持します。</value></data>
 </root>

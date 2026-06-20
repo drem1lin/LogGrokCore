@@ -1,0 +1,33 @@
+<mahapps:MetroWindow x:Class="LogGrokCore.AboutWindow"
+                     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                     xmlns:mahapps="http://metro.mahapps.com/winfx/xaml/controls"
+                     xmlns:loc="clr-namespace:LogGrokCore.Localization"
+                     Title="{loc:Loc About_Title}"
+                     Icon="pack://application:,,,/LogGrokCore;component/icon.ico"
+                     ShowIconOnTitleBar="False"
+                     ShowMinButton="False"
+                     ShowMaxRestoreButton="False"
+                     ResizeMode="NoResize"
+                     SizeToContent="WidthAndHeight"
+                     WindowStartupLocation="CenterOwner">
+    <StackPanel Margin="24" MinWidth="340">
+        <TextBlock Text="Loggrok 2" FontSize="22" FontWeight="Bold" />
+        <StackPanel Orientation="Horizontal" Margin="0,12,0,0">
+            <TextBlock Text="{loc:Loc About_Version}" />
+            <TextBlock Text=": " />
+            <TextBlock x:Name="VersionText" />
+        </StackPanel>
+        <TextBlock x:Name="CommitText"
+                   Margin="0,4,0,0"
+                   FontSize="11"
+                   Opacity="0.6"
+                   TextWrapping="Wrap" />
+        <TextBlock Margin="0,16,0,0">
+            <Hyperlink NavigateUri="https://github.com/drem1lin/LogGrokCore"
+                       RequestNavigate="OnRequestNavigate">
+                <Run Text="https://github.com/drem1lin/LogGrokCore" />
+            </Hyperlink>
+        </TextBlock>
+    </StackPanel>
+</mahapps:MetroWindow>

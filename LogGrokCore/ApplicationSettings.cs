@@ -16,7 +16,14 @@ namespace LogGrokCore
     {
         private static ApplicationSettings? instance;
 
-        public static string SettingsFileName => PathHelpers.GetLocalFilePath("appsettings.yaml");
+        /// <summary>
+        /// The live, per-user settings file. It lives under %LOCALAPPDATA% so each user has their
+        /// own copy and it is always writable without administrator rights; on first run it is
+        /// seeded from the read-only defaults template shipped next to the executable
+        /// (see <see cref="SettingsMigration"/>).
+        /// </summary>
+        public static string SettingsFileName =>
+            HomeDirectoryPathProvider.GetUserDataFilePath("appsettings.yaml");
 
         public DebugSettings DebugSettings { get; set; } = new();
 

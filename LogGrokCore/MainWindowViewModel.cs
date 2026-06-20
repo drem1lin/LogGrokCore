@@ -116,6 +116,12 @@ namespace LogGrokCore
 
         public ICommand OpenSettings { get; }
 
+        public ICommand OpenAbout => new DelegateCommand(() =>
+        {
+            var about = new AboutWindow { Owner = Application.Current.MainWindow };
+            about.ShowDialog();
+        });
+
         /// <summary>Entries for the Language submenu, with live "current language" checkmarks.</summary>
         public ObservableCollection<LanguageViewModel> Languages { get; }
 

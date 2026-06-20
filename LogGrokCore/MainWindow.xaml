@@ -71,6 +71,12 @@
     </mahapps:MetroWindow.LeftWindowCommands>
     <mahapps:MetroWindow.RightWindowCommands>
         <mahapps:WindowCommands>
+            <Button Command="{Binding OpenAbout}" ToolTip="{loc:Loc Menu_About}">
+                <iconPacks:PackIconMaterial Kind="HelpCircleOutline"
+                                            Width="18"
+                                            Height="18"
+                                            VerticalAlignment="Center" />
+            </Button>
             <Button Command="{Binding OpenSettings}">
                 <StackPanel Orientation="Horizontal">
                     <Rectangle Width="20"

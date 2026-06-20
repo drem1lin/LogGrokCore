@@ -1,7 +1,10 @@
 using System;
+using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Windows;
 using LogGrokCore.Diagnostics;
+using LogGrokCore.Localization;
 
 namespace LogGrokCore.Bootstrap
 {
@@ -12,6 +15,10 @@ namespace LogGrokCore.Bootstrap
         {
             var command = args.SingleOrDefault();
 
+            // Make sure the live settings file exists in its writable ProgramData location
+            // before anything reads the settings (ConfigureErrorReporting below does).
+            SettingsMigration.EnsureSettingsFilePresent(PromptResetSettings);
+
             ConfigureErrorReporting(command);
 
             if (IsNeedStopExecution(command))
@@ -20,6 +27,26 @@ namespace LogGrokCore.Bootstrap
             var fullPaths = args.Select(Path.GetFullPath).ToArray();
             var manager = new SingleInstanceManager();
             manager.Run(fullPaths);
+        }
+
+        /// <summary>
+        /// Asked only when upgrading from a version that stored settings next to the executable.
+        /// The stored language isn't loaded yet, so the prompt uses the OS UI language.
+        /// </summary>
+        private static SettingsMigration.PromptResult PromptResetSettings()
+        {
+            TranslationSource.Instance.SetCulture(CultureInfo.CurrentUICulture.Name);
+            var source = TranslationSource.Instance;
+
+            var result = MessageBox.Show(
+                source["Migration_ResetMessage"],
+                source["Migration_ResetTitle"],
+                MessageBoxButton.YesNo,
+                MessageBoxImage.Question);
+
+            return result == MessageBoxResult.Yes
+                ? SettingsMigration.PromptResult.ResetToDefaults
+                : SettingsMigration.PromptResult.KeepExisting;
         }
 
         private static bool IsNeedStopExecution(string? command)
@@ -42,9 +69,12 @@ namespace LogGrokCore.Bootstrap
 
             if (isNeedEnableWer)
             {
+                // Ensure this user's dump folder exists, but register the unexpanded template so
+                // WER routes each user's dumps into their own subfolder under one HKLM key.
+                HomeDirectoryPathProvider.GetDiagnosticsDirectory("Dumps");
                 EvaluateIfNeed(
                     () => CrashDumpConfiguration.Enable(
-                        HomeDirectoryPathProvider.GetDirectoryFullPath("Dumps"),
+                        HomeDirectoryPathProvider.DumpFolderTemplate,
                         settings.MaxDumpsCount),
                     enable: true,
                     command);

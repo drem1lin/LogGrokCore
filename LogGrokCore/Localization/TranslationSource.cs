@@ -98,6 +98,15 @@ namespace LogGrokCore.Localization
                     if (string.Equals(language.Code, languageCode, StringComparison.OrdinalIgnoreCase))
                         return language;
                 }
+
+                // Fall back to the base language of a region-specific code (e.g. "ru-RU" -> "ru"),
+                // so an OS culture like "de-DE" still resolves to a supported language.
+                var twoLetter = languageCode.Split('-')[0];
+                foreach (var language in AvailableLanguages)
+                {
+                    if (string.Equals(language.Code.Split('-')[0], twoLetter, StringComparison.OrdinalIgnoreCase))
+                        return language;
+                }
             }
 
             return AvailableLanguages[0];

@@ -91,4 +91,12 @@
   <data name="Marked_Title" xml:space="preserve"><value>Zaznaczone wiersze</value></data>
   <data name="Config_CorruptedTitle" xml:space="preserve"><value>Nie można wczytać ustawień</value></data>
   <data name="Config_CorruptedMessage" xml:space="preserve"><value>Plik konfiguracji jest uszkodzony i nie można go wczytać. Sprawdź wcięcia: używaj spacji zamiast tabulatorów i wyrównaj klucze na tym samym poziomie.</value></data>
+  <data name="Menu_About" xml:space="preserve"><value>O programie</value></data>
+  <data name="About_Title" xml:space="preserve"><value>O programie</value></data>
+  <data name="About_Version" xml:space="preserve"><value>Wersja</value></data>
+  <data name="Migration_ResetTitle" xml:space="preserve"><value>Aktualizacja ustawień</value></data>
+  <data name="Migration_ResetMessage" xml:space="preserve"><value>Przywrócić ustawienia domyślne?
+
+Tak — użyj nowych ustawień domyślnych.
+Nie — zachowaj bieżące ustawienia.</value></data>
 </root>

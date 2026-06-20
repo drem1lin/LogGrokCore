@@ -91,4 +91,12 @@
   <data name="Marked_Title" xml:space="preserve"><value>Líneas marcadas</value></data>
   <data name="Config_CorruptedTitle" xml:space="preserve"><value>No se puede cargar la configuración</value></data>
   <data name="Config_CorruptedMessage" xml:space="preserve"><value>El archivo de configuración está dañado y no se pudo cargar. Compruebe la sangría: use espacios en lugar de tabulaciones y alinee las claves al mismo nivel.</value></data>
+  <data name="Menu_About" xml:space="preserve"><value>Acerca de</value></data>
+  <data name="About_Title" xml:space="preserve"><value>Acerca de</value></data>
+  <data name="About_Version" xml:space="preserve"><value>Versión</value></data>
+  <data name="Migration_ResetTitle" xml:space="preserve"><value>Actualizar configuración</value></data>
+  <data name="Migration_ResetMessage" xml:space="preserve"><value>¿Restablecer la configuración a los valores predeterminados?
+
+Sí: usar la nueva configuración predeterminada.
+No: mantener la configuración actual.</value></data>
 </root>

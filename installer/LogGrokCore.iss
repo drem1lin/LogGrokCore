@@ -38,6 +38,13 @@ Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{
 Name: "fileassoc_log"; Description: "{cm:AssocLog}"; GroupDescription: "{cm:FileAssoc}"
 Name: "fileassoc_txt"; Description: "{cm:AssocTxt}"; GroupDescription: "{cm:FileAssoc}"; Flags: unchecked
 
+[Dirs]
+; Logs and crash dumps go under %ProgramData%\LogGrok2\Users\<user>. Grant the Users group
+; modify access so each user can create their own subfolder without admin rights.
+; (Per-user settings and caches live under %LOCALAPPDATA% and need no special permissions.)
+Name: "{commonappdata}\LogGrok2"; Permissions: users-modify
+Name: "{commonappdata}\LogGrok2\Users"; Permissions: users-modify
+
 [Files]
 Source: "publish\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
 
