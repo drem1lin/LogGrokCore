@@ -232,6 +232,14 @@ namespace LogGrokCore
                 return;
             }
 
+            // If the file is already open, activate its tab instead of opening a duplicate.
+            var alreadyOpen = FindOpenDocument(fileName);
+            if (alreadyOpen != null)
+            {
+                CurrentDocument = alreadyOpen;
+                return;
+            }
+
             try
             {
                 CurrentDocument = CreateDocument(fileName);
@@ -247,6 +255,35 @@ namespace LogGrokCore
                     source["OpenFile_ErrorTitle"],
                     MessageBoxButton.OK,
                     MessageBoxImage.Warning);
+            }
+        }
+
+        /// <summary>
+        /// Returns the already-open document for <paramref name="fileName"/>, comparing by full
+        /// path (case-insensitively, as Windows paths are), or null if it isn't open.
+        /// </summary>
+        private DocumentViewModel? FindOpenDocument(string fileName)
+        {
+            var target = TryGetFullPath(fileName);
+            foreach (var document in Documents)
+            {
+                if (string.Equals(TryGetFullPath(document.DocumentId), target,
+                        StringComparison.OrdinalIgnoreCase))
+                    return document;
+            }
+
+            return null;
+        }
+
+        private static string TryGetFullPath(string path)
+        {
+            try
+            {
+                return Path.GetFullPath(path);
+            }
+            catch
+            {
+                return path;
             }
         }
 
