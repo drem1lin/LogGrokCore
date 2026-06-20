@@ -2,25 +2,41 @@
 using System.Diagnostics;
 using System.Runtime.ExceptionServices;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace LogGrokCore.Diagnostics
 {
   public static class ExceptionsLogger
-  {      
+  {
       public static void Initialize()
       {
           AppDomain.CurrentDomain.FirstChanceException += OnFirstChanceException;
-          AppDomain.CurrentDomain.UnhandledException += OnUnhandledException;     
+          AppDomain.CurrentDomain.UnhandledException += OnUnhandledException;
+          // Faults in fire-and-forget tasks would otherwise be lost (or tear down the process
+          // at GC time with no log line).
+          TaskScheduler.UnobservedTaskException += OnUnobservedTaskException;
       }
-      
+
+      /// <summary>Logs an exception that escaped to the WPF dispatcher (UI thread).</summary>
+      public static void LogUnhandledDispatcherException(Exception exception)
+      {
+          OnException(exception, "dispatcher unhandled exception");
+      }
+
       private static void OnFirstChanceException(object? _, FirstChanceExceptionEventArgs args)
       {
           OnException(args.Exception, "first chance exception");
       }
-      
+
       private static void OnUnhandledException(object? _, UnhandledExceptionEventArgs args)
       {
           OnException(args.ExceptionObject, "unhandled exception");
+      }
+
+      private static void OnUnobservedTaskException(object? _, UnobservedTaskExceptionEventArgs args)
+      {
+          OnException(args.Exception, "unobserved task exception");
+          args.SetObserved();
       }
       
       private static void OnException(object exceptionObj, string exceptionType)

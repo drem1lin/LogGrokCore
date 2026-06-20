@@ -46,7 +46,7 @@ namespace LogGrokCore.Data
             {
                 length = stream.Read(buffer, 0, buffer.Length);
             }
-            var span = buffer.AsSpan(length);
+            var span = buffer.AsSpan(0, length);
 
             // try to find BOM
             foreach (var unicodeEncoding in _unicodeEncodings)

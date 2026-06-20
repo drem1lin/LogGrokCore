@@ -13,7 +13,12 @@ namespace LogGrokCore.Diagnostics
       static Logger()
       {
           NLogLogger = LogManager.GetCurrentClassLogger();
-          GlobalDiagnosticsContext.Set("EntryAssembly", Assembly.GetEntryAssembly()?.FullName);
+          var entryAssembly = Assembly.GetEntryAssembly();
+          GlobalDiagnosticsContext.Set("EntryAssembly", entryAssembly?.FullName);
+          // Populate the log-header "Version:" field so crash reports show which build produced them.
+          GlobalDiagnosticsContext.Set("DeploymentVersion",
+              entryAssembly?.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion
+              ?? entryAssembly?.GetName().Version?.ToString());
       }
       
       private Logger (string component)

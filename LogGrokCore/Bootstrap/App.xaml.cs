@@ -26,6 +26,9 @@ namespace LogGrokCore.Bootstrap
 
             TracesLogger.Initialize();
             ExceptionsLogger.Initialize();
+            // Log UI-thread exceptions; leave them unhandled so the crash-dump path still runs.
+            DispatcherUnhandledException += (_, e) =>
+                ExceptionsLogger.LogUnhandledDispatcherException(e.Exception);
             Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
             _container = new Container();
             LoggerRegistrationHelper.Register(_container);

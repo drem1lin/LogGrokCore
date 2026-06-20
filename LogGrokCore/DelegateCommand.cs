@@ -76,9 +76,12 @@ namespace LogGrokCore
             _execute(parameter);
         }
 
-#pragma warning disable CS0169, CS0067
-        public event EventHandler? CanExecuteChanged;
-#pragma warning restore CS0169
-#pragma warning restore CS0067
+        // Re-query CanExecute whenever WPF re-evaluates command state (focus, input, etc.),
+        // so buttons/menu items bound to commands with a dynamic CanExecute don't go stale.
+        public event EventHandler? CanExecuteChanged
+        {
+            add => CommandManager.RequerySuggested += value;
+            remove => CommandManager.RequerySuggested -= value;
+        }
     }
 }

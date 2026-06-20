@@ -57,6 +57,7 @@ public class ChunkedList<T> : IList<T>
     public void Clear()
     {
         _chunks.Clear();
+        _count = 0;
     }
 
     public bool Contains(T item) => throw new NotSupportedException();

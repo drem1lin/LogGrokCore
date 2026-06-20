@@ -31,9 +31,9 @@ public static class Search
             get => _isFinished;
             set
             {
-                
                 _isFinished = value;
-                _progressCompletionSource.SetResult();
+                // Tolerate being signalled more than once (e.g. cancel + finally) without throwing.
+                _progressCompletionSource.TrySetResult();
             }
         }
 

@@ -24,9 +24,13 @@ namespace LogGrokCore.Data
             Trace.TraceInformation($"Start loading {logFile.FilePath}.");
             var timeStamp = DateTime.Now;
             _loadingTask = Task.Factory.StartNew(
-                () => loaderImpl.Load(logFile.OpenForSequentialRead(), 
-                    encoding.GetBytes("\r"), encoding.GetBytes("\n"),
-                    _cancellationTokenSource.Token))
+                () =>
+                {
+                    using var stream = logFile.OpenForSequentialRead();
+                    loaderImpl.Load(stream,
+                        encoding.GetBytes("\r"), encoding.GetBytes("\n"),
+                        _cancellationTokenSource.Token);
+                })
                 .ContinueWith(t =>
                 {
                     switch(t.Status)

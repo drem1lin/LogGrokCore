@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Concurrent;
+using System.Diagnostics;
 using System.Threading.Tasks;
 using LogGrokCore.Data.Index;
 using LogGrokCore.Data.Monikers;
@@ -43,10 +44,26 @@ namespace LogGrokCore.Data
 
         private unsafe void ConsumeBuffers()
         {
+            try
+            {
+                ConsumeBuffersCore();
+            }
+            catch (Exception ex)
+            {
+                // If parsing throws, the producer would otherwise block forever on the full queue.
+                // Stop accepting input (which makes pending/blocked AddParsedBuffer calls throw, so
+                // the loader fails fast) and surface the error.
+                Trace.TraceError($"Parsed buffer consumer failed: {ex}");
+                _queue.CompleteAdding();
+            }
+        }
+
+        private unsafe void ConsumeBuffersCore()
+        {
             long lineOffsetFromBufferStart = 0;
 
             var componentsCount = _logMetaInformation.IndexedFieldNumbers.Length;
-            
+
 #pragma warning disable CS8619
             foreach (var (bufferStartOffset, lineCount, buffer) in _queue.GetConsumingEnumerable())
 #pragma warning restore CS8619
