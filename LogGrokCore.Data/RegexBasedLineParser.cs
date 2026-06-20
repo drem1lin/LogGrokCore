@@ -39,21 +39,40 @@ namespace LogGrokCore.Data
                 return false;
 
             var index = 0;
-            
+
             var lastComponentStart = 0;
             var lastComponentLength = 0;
 
-            var caps = MatchSurgery.GetCaptures(match);
-            var matchCounts = MatchSurgery.GetMatchCounts(match);
+            // Fast path reads Match's internal arrays without allocating Group objects; if that
+            // reflection isn't available on this runtime, fall back to the public Match.Groups API.
+            var useFastPath = MatchSurgery.IsAvailable;
+            var caps = useFastPath ? MatchSurgery.GetCaptures(match) : null;
+            var matchCounts = useFastPath ? MatchSurgery.GetMatchCounts(match) : null;
+
             foreach (var fieldToStore in _fieldsToStore)
             {
-                var cap = caps[fieldToStore + 1];
-                var matchCount = matchCounts[fieldToStore + 1];
-                if (cap != null && matchCount > 0)
-                {
-                    var componentStartIndex = cap[0];
-                    var componentLength =  cap[1];
+                var groupNumber = fieldToStore + 1;
 
+                bool hasValue;
+                int componentStartIndex;
+                int componentLength;
+                if (useFastPath)
+                {
+                    var cap = caps![groupNumber];
+                    hasValue = cap != null && matchCounts![groupNumber] > 0;
+                    componentStartIndex = hasValue ? cap![0] : 0;
+                    componentLength = hasValue ? cap![1] : 0;
+                }
+                else
+                {
+                    var group = match.Groups[groupNumber];
+                    hasValue = group.Success;
+                    componentStartIndex = hasValue ? group.Index : 0;
+                    componentLength = hasValue ? group.Length : 0;
+                }
+
+                if (hasValue)
+                {
                     lastComponentStart = componentStartIndex - beginning;
                     lastComponentLength = componentLength;
                 }

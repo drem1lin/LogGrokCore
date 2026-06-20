@@ -1,5 +1,7 @@
-﻿using System.Collections.Concurrent;
+﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Windows;
@@ -54,11 +56,26 @@ namespace LogGrokCore.Colors
             Brush? CreateBrush(string colorString)
             {
                 if (string.IsNullOrEmpty(colorString)) return null;
-                var color = (Color)ColorConverter.ConvertFromString(colorString);
-                var brush = new SolidColorBrush(color);
-                
-                brush.Freeze();
-                return brush;
+
+                // A malformed color in the user's config must not crash document opening:
+                // fall back to "no color" and log instead.
+                try
+                {
+                    if (ColorConverter.ConvertFromString(colorString) is not Color color)
+                    {
+                        Trace.TraceWarning($"Invalid color value '{colorString}' in color settings; ignoring.");
+                        return null;
+                    }
+
+                    var brush = new SolidColorBrush(color);
+                    brush.Freeze();
+                    return brush;
+                }
+                catch (Exception ex)
+                {
+                    Trace.TraceWarning($"Invalid color value '{colorString}' in color settings: {ex.Message}");
+                    return null;
+                }
             }
 
             ColorRule Convert(Configuration.ColorRule rule)

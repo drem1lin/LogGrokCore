@@ -44,23 +44,25 @@ namespace LogGrokCore.Diagnostics
           var exception = GetException(exceptionObj);
           try
           {
-              if (Interlocked.Increment(ref _isProcessingException) >= MaxRecursionDeep ||
+              // Per-thread guard: a single global counter could be tripped by concurrent
+              // exceptions on other threads and drop legitimate logs, so it is [ThreadStatic].
+              if (++_isProcessingException >= MaxRecursionDeep ||
                   FirstChanceExceptionsFilter.IsKnown(exception)) return;
-              Logger.Error("{0}: {1}", exceptionType, exception); 
+              Logger.Error("{0}: {1}", exceptionType, exception);
               Logger.Flush();
           }
-          catch (Exception logException) 
+          catch (Exception logException)
           {
                Debug.WriteLine(
-                    "Failed to log {0}: {1}{2}(logException: {3})", 
+                    "Failed to log {0}: {1}{2}(logException: {3})",
                     exceptionType,
                     exception,
-                    Environment.NewLine,                                    
+                    Environment.NewLine,
                     logException);
           }
           finally
           {
-            _ = Interlocked.Decrement(ref _isProcessingException);
+            _isProcessingException--;
           }
       }
       
@@ -74,7 +76,7 @@ namespace LogGrokCore.Diagnostics
       private static readonly Exception UnknownException = new ApplicationException("An unknown exception occurred");
       
       private static readonly Logger Logger = Logger.Get(typeof(ExceptionsLogger).Namespace);
-      
-      private static int _isProcessingException;
+
+      [ThreadStatic] private static int _isProcessingException;
   } 
 }

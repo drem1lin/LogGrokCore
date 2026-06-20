@@ -66,13 +66,23 @@ namespace LogGrokCore.Data
             {
                 try
                 {
+                    // Wait for new lines (or completion) via a signal instead of polling, so the
+                    // range is yielded as soon as data is available rather than up to 250 ms later.
                     while (currentIndex + minRangeSize > currentCount && !IsFinished)
                     {
-                        await Task.Delay(TimeSpan.FromMilliseconds(250), cancellationToken);
+                        // Capture the signal before re-checking so a notification raised between
+                        // the check and the await is not missed.
+                        var changed = _dataChangedSignal.Task;
+                        currentCount = Count;
+                        if (currentIndex + minRangeSize <= currentCount || IsFinished)
+                            break;
+
+                        await changed.WaitAsync(cancellationToken);
+                        ResetDataChangedSignal();
                         currentCount = Count;
                     }
                 }
-                catch (TaskCanceledException)
+                catch (OperationCanceledException)
                 {
                     yield break;
                 }
@@ -80,12 +90,26 @@ namespace LogGrokCore.Data
                 if (cancellationToken.IsCancellationRequested)
                     yield break;
 
-                
+
                 var rangeSize = currentCount - currentIndex;
                 yield return (currentIndex, rangeSize);
                 currentIndex += rangeSize;
                 currentCount = Count;
             }
+        }
+
+        // Async manual-reset signal raised whenever Count grows or the index is finished.
+        private volatile TaskCompletionSource _dataChangedSignal =
+            new(TaskCreationOptions.RunContinuationsAsynchronously);
+
+        private void NotifyDataChanged() => _dataChangedSignal.TrySetResult();
+
+        private void ResetDataChangedSignal()
+        {
+            var current = _dataChangedSignal;
+            if (current.Task.IsCompleted)
+                _ = Interlocked.CompareExchange(ref _dataChangedSignal,
+                    new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously), current);
         }
 
         public int Count
@@ -104,12 +128,14 @@ namespace LogGrokCore.Data
 
         public int Add(long lineStart)
         {
+            int lineNum;
             lock (_lineStarts)
             {
-                var lineNum = _lineStarts.Count;
+                lineNum = _lineStarts.Count;
                 _lineStarts.Add(lineStart);
-                return lineNum;
             }
+            NotifyDataChanged();
+            return lineNum;
         }
 
         public void Finish(int lastLength)
@@ -118,6 +144,7 @@ namespace LogGrokCore.Data
             {
                 _lastLineLength = lastLength;
             }
+            NotifyDataChanged();
         }
         
         public bool IsFinished
