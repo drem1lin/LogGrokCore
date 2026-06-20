@@ -45,8 +45,19 @@ public class GlyphLine : IDisposable
     public Rect GetTextBounds(Point startPoint, int firstTextSourceCharacterIndex, int textLength)
     {
         var height = Size.Height;
-        var start = _advanceWidthForChar.Take(firstTextSourceCharacterIndex).Sum();
-        var width = _advanceWidthForChar.Skip(firstTextSourceCharacterIndex).Take(textLength).Sum();
+
+        // Indexed sums instead of Take/Skip/Sum: this runs per highlight/selection rect on every render.
+        var count = _advanceWidthForChar.Count;
+        var startIndex = Math.Clamp(firstTextSourceCharacterIndex, 0, count);
+        var endIndex = Math.Clamp(firstTextSourceCharacterIndex + textLength, startIndex, count);
+
+        var start = 0.0;
+        for (var i = 0; i < startIndex; i++)
+            start += _advanceWidthForChar[i];
+
+        var width = 0.0;
+        for (var i = startIndex; i < endIndex; i++)
+            width += _advanceWidthForChar[i];
 
         return new Rect(start + startPoint.X, startPoint.Y, width, height);
     }

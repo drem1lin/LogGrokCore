@@ -12,6 +12,15 @@ namespace LogGrokCore.Controls.TextRender;
 
 public class TextControl : Control
 {
+    private static readonly Pen HighlightPen = CreateFrozenPen(Brushes.Moccasin, 0);
+
+    private static Pen CreateFrozenPen(Brush brush, double thickness)
+    {
+        var pen = new Pen(brush, thickness);
+        pen.Freeze();
+        return pen;
+    }
+
     private readonly TextView _textView;
     private Point? _startSelectionPoint;
 
@@ -59,7 +68,7 @@ public class TextControl : Control
         if (highlightGeometries != null)
         {
             drawingContext.DrawGeometry(Brushes.Moccasin,
-                new Pen(Brushes.Moccasin, 0),
+                HighlightPen,
                 highlightGeometries);
         }
 

@@ -378,7 +378,8 @@ public class TextView : Control, IClippingRectChangesAware
     protected override void OnRender(DrawingContext drawingContext)
     {
         var background = Background ?? Brushes.Transparent;
-        drawingContext.DrawRectangle(background, new Pen(background, 0), new Rect(0, 0, ActualWidth, ActualHeight));
+        // null pen == no outline; avoids allocating a Pen on every render.
+        drawingContext.DrawRectangle(background, null, new Rect(0, 0, ActualWidth, ActualHeight));
         base.OnRender(drawingContext);
     }
 
@@ -412,9 +413,9 @@ public class TextView : Control, IClippingRectChangesAware
             _children?.Add(outlineExpander);
         }
 
-        for (var i = 0; i < outlineData.ChildrenByPosition.Count; i++)
+        // foreach over the dictionary instead of ElementAt(i) in a loop (which was O(n^2)).
+        foreach (var (index, expander) in outlineData.ChildrenByPosition)
         {
-            var (index, expander) = outlineData.ChildrenByPosition.ElementAt(i);
             var rect = outlineData.ChildrenRectangles[index];
             expander.Arrange(rect);
         }

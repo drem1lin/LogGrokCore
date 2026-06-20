@@ -9,7 +9,16 @@ namespace LogGrokCore.Controls.TextRender;
 
 public class GuideLinesControl : Control, IClippingRectChangesAware
 {
-    private static readonly Brush OutlineBrush = Brushes.Gray;    
+    private static readonly Brush OutlineBrush = Brushes.Gray;
+    private static readonly Pen OutlinePen = CreateFrozenPen(OutlineBrush, 0.5);
+
+    private static Pen CreateFrozenPen(Brush brush, double thickness)
+    {
+        var pen = new Pen(brush, thickness);
+        pen.Freeze();
+        return pen;
+    }
+
     private double _width;
     private readonly HashSet<(double, double)> _renderedLines = new();
 
@@ -73,8 +82,6 @@ public class GuideLinesControl : Control, IClippingRectChangesAware
         var pixelsPerDip = (float)VisualTreeHelper.GetDpi(this).PixelsPerDip;
 
         var x = _width / 2;
-        
-        var outlinePen = new Pen(OutlineBrush, 0.5);
 
         var guidelines = new GuidelineSet();
         guidelines.GuidelinesX.Add(x + 0.5);
@@ -92,7 +99,7 @@ public class GuideLinesControl : Control, IClippingRectChangesAware
              yGuidelineSet.GuidelinesY.Add(lower + 0.5);
             yGuidelineSet.GuidelinesX.Add(x + 0.5);
             drawingContext.PushGuidelineSet(yGuidelineSet);
-            drawingContext.DrawLine(outlinePen, new Point(x, y1), new Point(x, y2));
+            drawingContext.DrawLine(OutlinePen, new Point(x, y1), new Point(x, y2));
             drawingContext.Pop();
             
             _renderedLines.Add((y1, y2));

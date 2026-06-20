@@ -15,6 +15,15 @@ public enum OutlineExpanderState
 
 public class OutlineExpander : ButtonBase
 {
+    private static readonly Pen TransparentPen = CreateFrozenPen(Brushes.Transparent, 1);
+
+    private static Pen CreateFrozenPen(Brush brush, double thickness)
+    {
+        var pen = new Pen(brush, thickness);
+        pen.Freeze();
+        return pen;
+    }
+
     public static readonly DependencyProperty StateProperty = DependencyProperty.Register(
         nameof(State), typeof(OutlineExpanderState),
         typeof(OutlineExpander), 
@@ -65,7 +74,7 @@ public class OutlineExpander : ButtonBase
 
     protected override void OnRender(DrawingContext drawingContext)
     {
-        drawingContext.DrawRectangle(Brushes.Transparent, new Pen(Brushes.Transparent, 1), new Rect(0, 0, ActualWidth, ActualHeight));
+        drawingContext.DrawRectangle(Brushes.Transparent, TransparentPen, new Rect(0, 0, ActualWidth, ActualHeight));
         
         var width = _currentSize.Width;
         var height = _currentSize.Height;
