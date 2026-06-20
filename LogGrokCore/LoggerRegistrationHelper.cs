@@ -10,6 +10,12 @@ namespace LogGrokCore
 
         static LoggerRegistrationHelper()
         {
+            // Resolve the log directory in code (with a writable fallback) and hand it to NLog,
+            // so the config doesn't rely on a ProgramData path the current user may not be able
+            // to create.
+            GlobalDiagnosticsContext.Set("logDirectory",
+                HomeDirectoryPathProvider.GetDiagnosticsDirectory("Logs"));
+
             var logConfigPath = PathHelpers.GetLocalFilePath("nlog.config");
             LogManager.Setup().LoadConfigurationFromFile(logConfigPath);
             LoggerProvider = new NLogLoggerProvider(new NLogProviderOptions(), LogManager.LogFactory);

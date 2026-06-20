@@ -99,4 +99,9 @@
 
 Oui — utiliser les nouveaux paramètres par défaut.
 Non — conserver vos paramètres actuels.</value></data>
+  <data name="OpenFile_ErrorTitle" xml:space="preserve"><value>Impossible d'ouvrir le fichier</value></data>
+  <data name="OpenFile_ErrorMessage" xml:space="preserve"><value>Impossible d'ouvrir le fichier :
+{0}
+
+{1}</value></data>
 </root>

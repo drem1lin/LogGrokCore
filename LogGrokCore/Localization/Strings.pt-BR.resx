@@ -99,4 +99,9 @@
 
 Sim — usar as novas configurações padrão.
 Não — manter suas configurações atuais.</value></data>
+  <data name="OpenFile_ErrorTitle" xml:space="preserve"><value>Não é possível abrir o arquivo</value></data>
+  <data name="OpenFile_ErrorMessage" xml:space="preserve"><value>Não foi possível abrir o arquivo:
+{0}
+
+{1}</value></data>
 </root>

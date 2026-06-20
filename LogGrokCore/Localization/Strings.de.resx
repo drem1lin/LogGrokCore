@@ -99,4 +99,9 @@
 
 Ja – neue Standardeinstellungen verwenden.
 Nein – aktuelle Einstellungen beibehalten.</value></data>
+  <data name="OpenFile_ErrorTitle" xml:space="preserve"><value>Datei kann nicht geöffnet werden</value></data>
+  <data name="OpenFile_ErrorMessage" xml:space="preserve"><value>Die Datei konnte nicht geöffnet werden:
+{0}
+
+{1}</value></data>
 </root>

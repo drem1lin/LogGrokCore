@@ -223,10 +223,28 @@ namespace LogGrokCore
 
         public void AddDocument(string fileName)
         {
-            if (File.Exists(fileName))
-                CurrentDocument = CreateDocument(fileName);
-            else
+            if (!File.Exists(fileName))
+            {
                 Trace.TraceError($"File {fileName} is not exists");
+                return;
+            }
+
+            try
+            {
+                CurrentDocument = CreateDocument(fileName);
+            }
+            catch (Exception ex)
+            {
+                // Opening can fail for reasons outside our control (access denied, locked,
+                // unreadable). Surface it instead of letting it crash the application.
+                Trace.TraceError($"Failed to open '{fileName}': {ex}");
+                var source = Localization.TranslationSource.Instance;
+                MessageBox.Show(
+                    string.Format(source["OpenFile_ErrorMessage"], fileName, ex.Message),
+                    source["OpenFile_ErrorTitle"],
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Warning);
+            }
         }
 
         private DocumentViewModel CreateDocument(string fileName)

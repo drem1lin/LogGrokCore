@@ -69,9 +69,8 @@ namespace LogGrokCore.Bootstrap
 
             if (isNeedEnableWer)
             {
-                // Ensure this user's dump folder exists, but register the unexpanded template so
-                // WER routes each user's dumps into their own subfolder under one HKLM key.
-                HomeDirectoryPathProvider.GetDiagnosticsDirectory("Dumps");
+                // Register the unexpanded template so WER routes each user's dumps into their own
+                // subfolder under one HKLM key; WER creates the folder itself at crash time.
                 EvaluateIfNeed(
                     () => CrashDumpConfiguration.Enable(
                         HomeDirectoryPathProvider.DumpFolderTemplate,

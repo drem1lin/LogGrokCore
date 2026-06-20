@@ -99,4 +99,9 @@
 
 Yes — use the new default settings.
 No — keep your current settings.</value></data>
+  <data name="OpenFile_ErrorTitle" xml:space="preserve"><value>Cannot open file</value></data>
+  <data name="OpenFile_ErrorMessage" xml:space="preserve"><value>Could not open the file:
+{0}
+
+{1}</value></data>
 </root>

@@ -99,4 +99,9 @@
 
 Да — использовать новые настройки по умолчанию.
 Нет — сохранить текущие настройки.</value></data>
+  <data name="OpenFile_ErrorTitle" xml:space="preserve"><value>Не удалось открыть файл</value></data>
+  <data name="OpenFile_ErrorMessage" xml:space="preserve"><value>Не удалось открыть файл:
+{0}
+
+{1}</value></data>
 </root>

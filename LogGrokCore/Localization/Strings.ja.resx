@@ -99,4 +99,9 @@
 
 はい — 新しい既定の設定を使用します。
 いいえ — 現在の設定を保持します。</value></data>
+  <data name="OpenFile_ErrorTitle" xml:space="preserve"><value>ファイルを開けません</value></data>
+  <data name="OpenFile_ErrorMessage" xml:space="preserve"><value>ファイルを開けませんでした:
+{0}
+
+{1}</value></data>
 </root>
