@@ -60,7 +60,13 @@ namespace LogGrokCore
 
         private void OnCurrentLineChanged(int lineNumber) => NavigateTo(lineNumber);
         private void OnCurrentSearchChanged(Regex regex) => LogViewModel.HighlightRegex = regex;
-        private void OnMarkedLinesChanged() => MarkedLinesChanged?.Invoke();
+        private void OnMarkedLinesChanged()
+        {
+            // Invalidate the cache so it is rebuilt lazily on next access, instead of re-reading
+            // every marked line from disk on every property read.
+            _markedLineViewModels = null;
+            MarkedLinesChanged?.Invoke();
+        }
 
         public void Dispose()
         {
@@ -87,22 +93,24 @@ namespace LogGrokCore
             LogViewModel.NavigateTo(lineNumber);
         }
         
-        public ObservableCollection<(int number, string text)> MarkedLineViewModels
-        {
-            get
-            {
-                var lineNumbers = _markedLines.ToList();
-                lineNumbers.Sort();
-                var collection = new ObservableCollection<(int number, string text)>();
-                foreach (var lineNumber in lineNumbers)
-                {
-                    var lines = new (int, string)[1];
-                    _lineProvider.Fetch(lineNumber, lines.AsSpan());
-                    collection.Add((lineNumber, _transformationPerformer.Transform(lines[0].Item2)));
-                }
+        private ObservableCollection<(int number, string text)>? _markedLineViewModels;
 
-                return collection;
+        public ObservableCollection<(int number, string text)> MarkedLineViewModels =>
+            _markedLineViewModels ??= BuildMarkedLineViewModels();
+
+        private ObservableCollection<(int number, string text)> BuildMarkedLineViewModels()
+        {
+            var lineNumbers = _markedLines.ToList();
+            lineNumbers.Sort();
+            var collection = new ObservableCollection<(int number, string text)>();
+            foreach (var lineNumber in lineNumbers)
+            {
+                var lines = new (int, string)[1];
+                _lineProvider.Fetch(lineNumber, lines.AsSpan());
+                collection.Add((lineNumber, _transformationPerformer.Transform(lines[0].Item2)));
             }
+
+            return collection;
         }
 
         public Selection MarkedLines => _markedLines;        

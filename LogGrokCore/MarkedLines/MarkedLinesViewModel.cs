@@ -87,9 +87,9 @@ namespace LogGrokCore.MarkedLines
             foreach (var documentViewModel in documents)
             {
                 if (_alreadySubscribed.Contains(documentViewModel)) continue;
-                documentViewModel.MarkedLineViewModels.CollectionChanged +=
-                    (_, _) => UpdateLinesCollection();
-                documentViewModel.MarkedLinesChanged += UpdateLinesCollection; 
+                // MarkedLinesChanged is the reliable signal; the previous CollectionChanged hookup
+                // attached to a throwaway collection instance and forced a disk read on subscribe.
+                documentViewModel.MarkedLinesChanged += UpdateLinesCollection;
                 _alreadySubscribed.Add(documentViewModel);
             }
         }

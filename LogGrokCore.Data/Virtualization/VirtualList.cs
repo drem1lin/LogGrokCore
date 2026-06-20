@@ -139,7 +139,19 @@ using System.Linq;
                 if (oldestKey < 0) break;
                 var (pageToReturn, _) = _pageCache[oldestKey];
                 _ = _pageCache.Remove(oldestKey);
+                DisposeItems(pageToReturn);
                 pageToReturn.Dispose();
+            }
+        }
+
+        private static void DisposeItems(PooledList<T> page)
+        {
+            // Release per-item resources (e.g. view models that subscribe to long-lived events)
+            // when a page is evicted, so they don't outlive their visibility.
+            foreach (var item in page)
+            {
+                if (item is IDisposable disposable)
+                    disposable.Dispose();
             }
         }
 

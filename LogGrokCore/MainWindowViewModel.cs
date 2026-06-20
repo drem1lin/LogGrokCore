@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
@@ -22,6 +23,7 @@ namespace LogGrokCore
         private DocumentViewModel? _currentDocument;
         private readonly ApplicationSettings _applicationSettings;
         private readonly SearchAutocompleteCache _searchAutocompleteCache;
+        private readonly Dictionary<DocumentViewModel, DocumentContainer> _containers = new();
         private bool _isDebugLoggingEnabled;
 
         public ObservableCollection<DocumentViewModel> Documents { get; }
@@ -46,6 +48,7 @@ namespace LogGrokCore
             _applicationSettings = applicationSettings;
             _searchAutocompleteCache = searchAutocompleteCache;
             Documents = new ObservableCollection<DocumentViewModel>();
+            Documents.CollectionChanged += OnDocumentsChanged;
             MarkedLinesViewModel = markedLinesViewModelFactory(Documents);
             OpenSettings = new DelegateCommand(() =>
             {
@@ -251,14 +254,31 @@ namespace LogGrokCore
         {
             var container = new DocumentContainer(fileName, _applicationSettings, _searchAutocompleteCache);
             var viewModel = container.GetDocumentViewModel();
+            _containers[viewModel] = container;
             Documents.Add(viewModel);
-            Documents.CollectionChanged += (o, e) =>
-            {
-                if (Documents.Contains(viewModel))
-                    return;
-                container.Dispose();
-            };
             return viewModel;
+        }
+
+        // Dispose a document's container (which disposes its view models and file handle) when the
+        // document is removed. Subscribed once, so handlers don't accumulate per opened document.
+        private void OnDocumentsChanged(object? sender, NotifyCollectionChangedEventArgs e)
+        {
+            if (e.Action == NotifyCollectionChangedAction.Reset)
+            {
+                foreach (var container in _containers.Values)
+                    container.Dispose();
+                _containers.Clear();
+                return;
+            }
+
+            if (e.OldItems == null)
+                return;
+
+            foreach (DocumentViewModel viewModel in e.OldItems)
+            {
+                if (_containers.Remove(viewModel, out var container))
+                    container.Dispose();
+            }
         }
 
         public event EventHandler? ShowScratchPad;

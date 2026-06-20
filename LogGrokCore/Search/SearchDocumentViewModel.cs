@@ -132,6 +132,10 @@ namespace LogGrokCore.Search
         
         public void Dispose()
         {
+            // FilterSettings is a per-document singleton that outlives individual searches;
+            // unsubscribe so closed searches don't pile up on it.
+            _filterSettings.ExclusionsChanged -= UpdateLines;
+            NavigateToIndexRequested = null;
             lock (_cancellationTokenSourceLock)
             {
                 _currentSearchCancellationTokenSource?.Cancel();

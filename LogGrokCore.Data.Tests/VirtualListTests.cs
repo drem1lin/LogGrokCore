@@ -107,6 +107,38 @@ namespace LogGrokCore.Data.Tests
             Assert.AreEqual(fetchCountBefore + 1, provider.FetchCallCount);
         }
 
+        private sealed class DisposableItem : IDisposable
+        {
+            public string Value { get; }
+            public bool IsDisposed { get; private set; }
+            public DisposableItem(string value) => Value = value;
+            public void Dispose() => IsDisposed = true;
+        }
+
+        [TestMethod]
+        public void CacheEviction_DisposesItemsOfEvictedPages()
+        {
+            // MaxCacheSize = 10, PageSize = 128.
+            var provider = new TestItemProvider(2000);
+            var created = new List<DisposableItem>();
+            var list = new VirtualList<string, DisposableItem>(provider, s =>
+            {
+                var item = new DisposableItem(s);
+                created.Add(item);
+                return item;
+            });
+
+            // Touch 12 pages in order; the two oldest (pages 0 and 1) get evicted.
+            for (var page = 0; page < 12; page++)
+                _ = list[page * 128];
+
+            var evictedPageItem = created.Single(i => i.Value == "item_0");
+            var cachedPageItem = created.Single(i => i.Value == "item_256"); // page 2, still cached
+
+            Assert.IsTrue(evictedPageItem.IsDisposed, "Items of an evicted page must be disposed.");
+            Assert.IsFalse(cachedPageItem.IsDisposed, "Items of a still-cached page must not be disposed.");
+        }
+
         [TestMethod]
         public void IsReadOnly_ReturnsTrue()
         {
