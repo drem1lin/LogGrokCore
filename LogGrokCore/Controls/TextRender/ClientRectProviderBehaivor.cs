@@ -1,20 +1,29 @@
-﻿using System;
-using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using System.Windows;
-using LogGrokCore.Data;
 
 namespace LogGrokCore.Controls.TextRender;
 
 public static class ClippingRectProviderBehavior
 {
-    private static readonly Dictionary<int, Dictionary<int, (Rect rect, WeakReference<IClippingRectChangesAware>)>>
+    private sealed class RectBox
+    {
+        public Rect Value;
+        public bool HasValue;
+    }
+
+    // container -> (its child targets -> last reported clipping rect).
+    // Both levels are keyed by reference identity (no GetHashCode collisions) and use
+    // ConditionalWeakTable so entries are reclaimed automatically when the container or target
+    // is garbage-collected — nothing is rooted in this static, so there is no leak.
+    private static readonly
+        ConditionalWeakTable<FrameworkElement, ConditionalWeakTable<IClippingRectChangesAware, RectBox>>
         Subscriptions = new();
 
     public static readonly DependencyProperty ClippingRectProviderProperty = DependencyProperty.RegisterAttached(
         "ClippingRectProvider", typeof(FrameworkElement), typeof(ClippingRectProviderBehavior),
         new FrameworkPropertyMetadata(default(FrameworkElement),
             FrameworkPropertyMetadataOptions.Inherits, ClippingRectProviderChanged));
-   
+
     public static Rect GetClippingRect(FrameworkElement container, FrameworkElement element)
     {
         var elementRect = new Rect(0, 0, element.ActualWidth, element.ActualHeight);
@@ -38,60 +47,43 @@ public static class ClippingRectProviderBehavior
             return;
         }
 
-        foreach (var (_, subscriptionsList) in Subscriptions)
-        {
-            var targetHashCode = d.GetHashCode();
-            _ = subscriptionsList.Remove(targetHashCode);
-        }
+        // Detach this target from any container it was previously registered with.
+        foreach (var (_, targets) in Subscriptions)
+            targets.Remove(targetObject);
 
         if (e.NewValue is not FrameworkElement containerElement)
         {
             return;
         }
 
-        if (!Subscriptions.TryGetValue(containerElement.GetHashCode(), out var subscriptionList))
+        if (!Subscriptions.TryGetValue(containerElement, out var subscriptionList))
         {
-            subscriptionList = new Dictionary<int, (Rect, WeakReference<IClippingRectChangesAware>)>();
-            containerElement.LayoutUpdated += (_, _) =>
-            {
-                using var changedRects =
-                    new PooledList<(int, (Rect, WeakReference<IClippingRectChangesAware>))>();
-                
-                using var toDelete = new PooledList<int>();
-
-                foreach (var (code, (rect, weakRef)) in subscriptionList)
-                {
-                    if (!weakRef.TryGetTarget(out var target))
-                    {
-                        toDelete.Add(code);
-                        continue;
-                    }
-
-                    var clippingRect = GetClippingRect(containerElement, (FrameworkElement)target);
-                    if (rect != clippingRect)
-                    {
-                        changedRects.Add((code, (clippingRect, weakRef)));
-                        target.OnChildRectChanged(rect);
-                    }
-                }
-
-                foreach (var code in toDelete)
-                {
-                    _ = subscriptionList.Remove(code);
-                }
-
-                foreach (var (code, value) in changedRects)
-                {
-                    subscriptionList[code] = value;
-                }
-            };
-            Subscriptions[containerElement.GetHashCode()] = subscriptionList;
+            subscriptionList = new ConditionalWeakTable<IClippingRectChangesAware, RectBox>();
+            var targets = subscriptionList;
+            containerElement.LayoutUpdated += (_, _) => OnContainerLayoutUpdated(containerElement, targets);
+            Subscriptions.Add(containerElement, subscriptionList);
         }
 
-        var clippingRect = GetClippingRect(containerElement, targetElement);  
-        subscriptionList[targetObject.GetHashCode()] =
-            (clippingRect,
-                new WeakReference<IClippingRectChangesAware>(targetObject));
+        var clippingRect = GetClippingRect(containerElement, targetElement);
+        subscriptionList.AddOrUpdate(targetObject, new RectBox { Value = clippingRect, HasValue = true });
         targetObject.OnChildRectChanged(clippingRect);
+    }
+
+    private static void OnContainerLayoutUpdated(FrameworkElement container,
+        ConditionalWeakTable<IClippingRectChangesAware, RectBox> targets)
+    {
+        foreach (var (target, box) in targets)
+        {
+            if (target is not FrameworkElement element)
+                continue;
+
+            var clippingRect = GetClippingRect(container, element);
+            if (box.HasValue && box.Value == clippingRect)
+                continue;
+
+            box.Value = clippingRect;
+            box.HasValue = true;
+            target.OnChildRectChanged(clippingRect);
+        }
     }
 }
