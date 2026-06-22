@@ -154,18 +154,26 @@ namespace LogGrokCore.Controls.ListControls
             // Disable Text search
         }
 
-        // ad hoc 
+        // ad hoc
         // TODO redo columns tuning
         private async void ScheduleMandatoryRemeasure()
         {
-            for (var i = 0; i< 10 && !_headerAdjusted; i++)
+            // async void: swallow exceptions so a transient failure here never crashes the app.
+            try
             {
-                await Task.Delay(TimeSpan.FromMilliseconds(200));
-                if (Items.Count < 2) continue;
-                
-                ScheduleRemeasure(0);
-                return;
-            }            
+                for (var i = 0; i < 10 && !_headerAdjusted; i++)
+                {
+                    await Task.Delay(TimeSpan.FromMilliseconds(200));
+                    if (Items.Count < 2) continue;
+
+                    ScheduleRemeasure(0);
+                    return;
+                }
+            }
+            catch (Exception e)
+            {
+                Trace.TraceWarning($"ScheduleMandatoryRemeasure failed: {e.Message}");
+            }
         }
 
         private void ScheduleRemeasure(int _)
@@ -182,7 +190,20 @@ namespace LogGrokCore.Controls.ListControls
             _panel?.InvalidateMeasure();
         }
        
-        private void ScheduleResetColumnsWidth()
+        // Bounds the self-rescheduling below: before a file is open there is no GridView/panel/items,
+        // and re-queuing at ApplicationIdle forever would keep the dispatcher from ever idling.
+        private const int MaxResetColumnsRetries = 50;
+
+        private void OnColumnActualWidthChanged(object? sender, PropertyChangedEventArgs args)
+        {
+            if (args.PropertyName != "ActualWidth") return;
+            if (View is not System.Windows.Controls.GridView gridView) return;
+            var settings = ColumnSettings;
+            if (settings != null)
+                settings.ColumnWidths = gridView.Columns.Select(c => c.ActualWidth).ToArray();
+        }
+
+        private void ScheduleResetColumnsWidth(int retry = 0)
         {
             double CalculateRemainingSpace(System.Windows.Controls.GridView view,
                 VirtualizingStackPanel.VirtualizingStackPanel panel)
@@ -221,7 +242,8 @@ namespace LogGrokCore.Controls.ListControls
                 if (View is not System.Windows.Controls.GridView gridView || GetPanel() is not { } panel ||
                     Items.Count <= 0)
                 {
-                    ScheduleResetColumnsWidth();
+                    if (retry < MaxResetColumnsRetries)
+                        ScheduleResetColumnsWidth(retry + 1);
                     return;
                 }
 
@@ -237,14 +259,8 @@ namespace LogGrokCore.Controls.ListControls
                         {
                             if (column is INotifyPropertyChanged notifyPropertyChanged)
                             {
-                                notifyPropertyChanged.PropertyChanged += (_, args) =>
-                                {
-                                    if (args.PropertyName == "ActualWidth")
-                                    {
-                                        columnSettings.ColumnWidths =
-                                            gridView.Columns.Select(gridViewColumn => gridViewColumn.ActualWidth).ToArray();
-                                    }
-                                };
+                                notifyPropertyChanged.PropertyChanged -= OnColumnActualWidthChanged;
+                                notifyPropertyChanged.PropertyChanged += OnColumnActualWidthChanged;
                             }
                         }
                     }

@@ -205,35 +205,48 @@ namespace LogGrokCore.Search
         private DateTime _isSearchingShowStartTime = DateTime.Now;
         private bool _localIsSearching;
         
+        private const int MinProgressShowTimeMs = 500;
+        private const int DelayBeforeShowProgressMs = 500;
+
+        // async void UI helper: a thrown exception here would crash the process, and a negative
+        // Task.Delay (elapsed already past the minimum show time) would throw — so guard and clamp.
         private async void SetIsSearching(bool isSearching)
         {
-            var minProgressShowTimeMs = 500;
-            var delayBeforeShowProgress = 500;
-            
-            if (isSearching == _localIsSearching)
-                return;
-                
-            _localIsSearching = isSearching;
-            Trace.TraceInformation($"localIsSearching = {_localIsSearching}");
+            try
+            {
+                if (isSearching == _localIsSearching)
+                    return;
 
-            if (!IsSearching)
-            {
-                await Task.Delay(TimeSpan.FromMilliseconds(delayBeforeShowProgress));
-                if (!_localIsSearching) return;
-                IsSearching = true;
-                _isSearchingShowStartTime = DateTime.Now;
-            }
-            else
-            {
-                var showTime = DateTime.Now - _isSearchingShowStartTime;
-                var minShowTime = minProgressShowTimeMs;
-                if (DateTime.Now -  _isSearchingShowStartTime < TimeSpan.FromMilliseconds(minShowTime))
+                _localIsSearching = isSearching;
+                Trace.TraceInformation($"localIsSearching = {_localIsSearching}");
+
+                if (!IsSearching)
                 {
-                    await Task.Delay(TimeSpan.FromMilliseconds(minShowTime - showTime.TotalMilliseconds));
-                } 
-                    
-                IsSearching = false;
+                    await Task.Delay(TimeSpan.FromMilliseconds(DelayBeforeShowProgressMs));
+                    if (!_localIsSearching) return;
+                    IsSearching = true;
+                    _isSearchingShowStartTime = DateTime.Now;
+                }
+                else
+                {
+                    var remaining = RemainingMinShowDelay(_isSearchingShowStartTime, DateTime.Now, MinProgressShowTimeMs);
+                    if (remaining > TimeSpan.Zero)
+                        await Task.Delay(remaining);
+
+                    IsSearching = false;
+                }
             }
+            catch (Exception e)
+            {
+                Trace.TraceWarning($"SetIsSearching failed: {e.Message}");
+            }
+        }
+
+        // Time left to keep the progress indicator visible so it does not flicker; never negative.
+        internal static TimeSpan RemainingMinShowDelay(DateTime showStart, DateTime now, int minShowTimeMs)
+        {
+            var remainingMs = minShowTimeMs - (now - showStart).TotalMilliseconds;
+            return remainingMs > 0 ? TimeSpan.FromMilliseconds(remainingMs) : TimeSpan.Zero;
         }
         
         private async void UpdateDocumentWhileLoading(Data.Search.Search.Progress progress,

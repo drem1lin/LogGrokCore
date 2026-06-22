@@ -21,7 +21,30 @@ low/medium-risk ones were fixed across these commits:
 
 Test count went 89 → 152.
 
-### Phase 7 — render hot-path perf (pending commit)
+### Phase 8 — reliability (pending commit)
+- **Y12** `SearchDocumentViewModel.SetIsSearching` wrapped in try/catch (async void) and the
+  min-show delay clamped via the extracted, unit-tested `RemainingMinShowDelay` (never negative);
+  `ListView.ScheduleMandatoryRemeasure` wrapped in try/catch.
+- **Y13** `ListView.ScheduleResetColumnsWidth` bounds its ApplicationIdle self-reschedule
+  (`MaxResetColumnsRetries`) so an open app with no document no longer idle-spins; the per-column
+  `ActualWidth` subscription is now a named handler (no per-column closure, unsubscribable).
+- **Y14** `BaseLogListViewItem` subscribes `Items.CurrentChanged` via Loaded/Unloaded instead of
+  the ctor (recycled/virtualized containers no longer leak); `UpdateIsCurrentProperty` null-guards
+  `Content`.
+- **Y6**  `SingleInstanceManager.StartListeningNextInstances` moves try/catch inside the accept
+  loop so one bad connection no longer permanently stops "open in existing window"; message parsing
+  extracted to unit-tested `ParseInstanceMessage`.
+- **Y17 (partial)** `UpdateLinesCollection` index access bounded against `IndexOutOfRange`.
+  NOTE: the review premise was wrong — `MarkedLinesViewModel` is registered **transient** (not
+  `Reuse.Singleton`, `App.xaml.cs:101`), so its un-unsubscribed static `TranslationSource`
+  subscription is a real (not benign) leak if resolved more than once. Left for a follow-up that
+  adds a dispose/lifecycle hook.
+- Tests: +3 `RemainingMinShowDelay`, +4 `ParseInstanceMessage` (181 → 188).
+- Validated by running the app: 2 GB document opens with correct column sizing and row coloring,
+  row selection is stable, and idle CPU is 0% with both an empty and a loaded document (confirms
+  the Y13 idle-loop fix). UI-lifecycle paths (Y13/Y14) have no unit coverage — validated by running.
+
+### Phase 7 — render hot-path perf (committed beebce7)
 - **Y7** `ColorSettings` regexes compiled with `RegexOptions.CultureInvariant`;
   `BaseLogListViewItem.OnContentChanged` short-circuits when there are no color rules.
 - **Y8** `SearchPattern.GetRegex` caches the compiled `Regex` by (effective pattern, options)

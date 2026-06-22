@@ -29,11 +29,25 @@ namespace LogGrokCore.Controls.ListControls
         public BaseLogListViewItem(ItemsControl itemsControl)
         {
             _itemsControl = itemsControl;
-            _itemsControl.Items.CurrentChanged += (_, _) =>
-            {
-                UpdateIsCurrentProperty();
-            };
+            // Manage the subscription via Loaded/Unloaded: a ctor-time subscription is never
+            // released, so virtualized/recycled containers leak through ItemCollection.CurrentChanged.
+            Loaded += OnLoaded;
+            Unloaded += OnUnloaded;
         }
+
+        private void OnLoaded(object sender, RoutedEventArgs e)
+        {
+            _itemsControl.Items.CurrentChanged -= OnCurrentChanged;
+            _itemsControl.Items.CurrentChanged += OnCurrentChanged;
+            UpdateIsCurrentProperty();
+        }
+
+        private void OnUnloaded(object sender, RoutedEventArgs e)
+        {
+            _itemsControl.Items.CurrentChanged -= OnCurrentChanged;
+        }
+
+        private void OnCurrentChanged(object? sender, EventArgs e) => UpdateIsCurrentProperty();
 
         public static readonly DependencyProperty OnItemActivatedCommandProperty = DependencyProperty.RegisterAttached(
             "OnItemActivatedCommand", typeof(ICommand), typeof(BaseLogListViewItem), new PropertyMetadata(default(ICommand), OnItemActivatedCommandChanged));
@@ -164,7 +178,7 @@ namespace LogGrokCore.Controls.ListControls
 
         private void UpdateIsCurrentProperty()
         {
-            IsCurrentItem = Content.Equals(_itemsControl.Items.CurrentItem);
+            IsCurrentItem = Content?.Equals(_itemsControl.Items.CurrentItem) ?? false;
         }
     }
 }

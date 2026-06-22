@@ -42,33 +42,34 @@ namespace LogGrokCore.Bootstrap
 
         private async void StartListeningNextInstances(Action<IEnumerable<string>> onNextInstanceStarted, CancellationToken token)
         {
-            try
+            // A failure handling one connection must not tear down the whole accept loop, otherwise
+            // the first instance silently stops honoring "open in existing window" from then on.
+            while (!token.IsCancellationRequested)
             {
-                while (!token.IsCancellationRequested)
+                try
                 {
                     await using var server = new NamedPipeServerStream(PipeName, PipeDirection.In, 1,
                         PipeTransmissionMode.Message, PipeOptions.Asynchronous);
                     await server.WaitForConnectionAsync(token);
                     using var reader = new StreamReader(server);
-                    var message = await reader.ReadToEndAsync();
+                    var message = await reader.ReadToEndAsync(token);
                     Trace.TraceInformation($"Another instance started with parameters: {message}");
-                    var files = message.Split(MessageSeparator)
-                        .Where(arg => !string.IsNullOrWhiteSpace(arg));
-                    onNextInstanceStarted(files);
+                    onNextInstanceStarted(ParseInstanceMessage(message));
                     server.Disconnect();
                 }
-            }
-            catch (TaskCanceledException)
-            {
-            }
-            catch (OperationCanceledException)
-            {
-            }
-            catch (Exception ex)
-            {
-                Trace.TraceError($"Error in pipe listener: {ex.Message}");
+                catch (Exception ex) when (ex is OperationCanceledException)
+                {
+                    break;
+                }
+                catch (Exception ex)
+                {
+                    Trace.TraceError($"Error in pipe listener iteration, continuing to listen: {ex.Message}");
+                }
             }
         }
+
+        internal static IEnumerable<string> ParseInstanceMessage(string message) =>
+            message.Split(MessageSeparator).Where(arg => !string.IsNullOrWhiteSpace(arg));
 
         private void TransferArgumentsToFirstInstance(string[] args)
         {

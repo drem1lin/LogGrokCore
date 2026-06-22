@@ -115,12 +115,14 @@ namespace LogGrokCore.MarkedLines
                     continue;
                 }
 
-                while (_markedLines[index].Index < lineNumber)
+                // Bound the index access: removals can drain the slot, and the original
+                // unguarded _markedLines[index] would then throw IndexOutOfRange.
+                while (index < _markedLines.Count && _markedLines[index].Index < lineNumber)
                 {
                     _markedLines.RemoveAt(index);
                 }
 
-                if (_markedLines[index].Index > lineNumber)
+                if (index >= _markedLines.Count || _markedLines[index].Index > lineNumber)
                 {
                     _markedLines.Insert(index, new MarkedLineViewModel(document, lineNumber, text));
                 }
