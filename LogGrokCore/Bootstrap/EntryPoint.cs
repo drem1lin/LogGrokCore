@@ -59,7 +59,8 @@ namespace LogGrokCore.Bootstrap
         {
             var settings = ApplicationSettings.Instance().DebugSettings;
             var isEnabled = CrashDumpConfiguration.IsEnabled();
-            var settingsChanged = CrashDumpConfiguration.SettingsChanged(settings.MaxDumpsCount);
+            var settingsChanged = CrashDumpConfiguration.SettingsChanged(
+                settings.MaxDumpsCount, HomeDirectoryPathProvider.DumpFolderTemplate);
 
             var isNeedEnableWer = (settings.EnableCrashDumps && !isEnabled)
                                   || command == CrashDumpConfiguration.EnableWerOnlyArgument
@@ -90,7 +91,7 @@ namespace LogGrokCore.Bootstrap
             {
                 configure();
             }
-            catch (UnauthorizedAccessException)
+            catch (Exception e) when (e is UnauthorizedAccessException or System.Security.SecurityException)
             {
                 if (IsNeedStopExecution(currentCommand))
                     return; // already running elevated; give up rather than loop

@@ -19,6 +19,9 @@ namespace LogGrokCore.Diagnostics
                 rule.SetLoggingLevels(minLevel, LogLevel.Fatal);
 
             LogManager.ReconfigExistingLoggers();
+
+            // First-chance exception logging is only worth its per-throw cost in verbose mode.
+            ExceptionsLogger.SetFirstChanceLoggingEnabled(verbose);
         }
     }
 }

@@ -1,6 +1,7 @@
 using System;
 using System.Diagnostics;
 using System.IO;
+using System.Security;
 using Microsoft.Win32;
 
 namespace LogGrokCore.Diagnostics
@@ -21,16 +22,44 @@ namespace LogGrokCore.Diagnostics
 
         public static bool IsEnabled()
         {
-            using var key = Registry.LocalMachine.OpenSubKey(KeyPath);
-            return key != null;
+            // Reading HKLM is normally permitted without elevation, but a locked-down policy can
+            // raise SecurityException; treat any read failure as "not configured" rather than
+            // crashing startup.
+            try
+            {
+                using var key = Registry.LocalMachine.OpenSubKey(KeyPath);
+                return key != null;
+            }
+            catch (Exception e) when (e is SecurityException or UnauthorizedAccessException or IOException)
+            {
+                Trace.TraceWarning($"Cannot read WER configuration: {e.Message}");
+                return false;
+            }
         }
 
-        public static bool SettingsChanged(int maxDumpsCount)
+        public static bool SettingsChanged(int maxDumpsCount, string dumpFolder)
         {
-            using var key = Registry.LocalMachine.OpenSubKey(KeyPath);
-            if (key == null)
+            try
+            {
+                using var key = Registry.LocalMachine.OpenSubKey(KeyPath);
+                if (key == null)
+                    return false;
+
+                var countDiffers = (int)(key.GetValue("DumpCount", -1) ?? -1) != maxDumpsCount;
+                var typeDiffers = (int)(key.GetValue("DumpType", -1) ?? -1) != 2;
+                // DumpFolder is stored as REG_EXPAND_SZ; read it raw so we compare against the
+                // unexpanded template, otherwise it would always look "changed" and re-elevate.
+                var storedFolder = key.GetValue("DumpFolder", null,
+                    RegistryValueOptions.DoNotExpandEnvironmentNames) as string;
+                var folderDiffers = !string.Equals(storedFolder, dumpFolder, StringComparison.OrdinalIgnoreCase);
+
+                return countDiffers || typeDiffers || folderDiffers;
+            }
+            catch (Exception e) when (e is SecurityException or UnauthorizedAccessException or IOException)
+            {
+                Trace.TraceWarning($"Cannot read WER configuration: {e.Message}");
                 return false;
-            return (int)(key.GetValue("DumpCount", -1) ?? -1) != maxDumpsCount;
+            }
         }
 
         // Requires administrative privileges (HKLM write).
@@ -67,9 +96,11 @@ namespace LogGrokCore.Diagnostics
 
             try
             {
+                // Fire-and-forget: the elevated helper just writes the registry and exits, and the
+                // running app does not depend on it completing — so do not block startup waiting
+                // for the UAC prompt / child process.
                 using var process = Process.Start(info);
-                process?.WaitForExit(30000);
-                return true;
+                return process != null;
             }
             catch (Exception ex)
             {

@@ -83,7 +83,7 @@ namespace LogGrokCore.Bootstrap
             // especially easy to hit when the window is closed quickly during loading.
             // All persistent state is saved above, so terminate the process directly to
             // skip that unstable managed-callback-during-loader-shutdown path.
-            Logger.FlushAll();
+            Logger.FlushAll(TimeSpan.FromSeconds(3));
             TerminateProcess(GetCurrentProcess(), 0);
         }
 

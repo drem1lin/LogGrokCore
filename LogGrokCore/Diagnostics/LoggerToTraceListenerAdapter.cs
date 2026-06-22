@@ -8,7 +8,12 @@ namespace LogGrokCore.Diagnostics
     public class LoggerToTraceListenerAdapter : TraceListener
     {
         private static readonly Logger Logger = Logger.Get(typeof(LoggerToTraceListenerAdapter).Namespace);
-        private readonly StringBuilder _message = new();
+
+        // Trace.Write/WriteLine can be called concurrently from many threads; a single shared
+        // StringBuilder would interleave their partial writes into garbled log lines. Buffer the
+        // in-progress line per thread instead.
+        [ThreadStatic] private static StringBuilder? _messageBuffer;
+        private static StringBuilder MessageBuffer => _messageBuffer ??= new StringBuilder();
 
         public LoggerToTraceListenerAdapter() : base("Logger")
         {
@@ -54,9 +59,13 @@ namespace LogGrokCore.Diagnostics
 
         public override void Flush()
         {
-            if (_message.Length != 0)
+            // Emit whatever was buffered by Write() on this thread; the old no-op discarded it
+            // (and wrote a stray blank line to the console).
+            var buffer = _messageBuffer;
+            if (buffer is { Length: > 0 })
             {
-                Console.WriteLine(string.Empty);
+                Logger.Info(buffer.ToString());
+                buffer.Clear();
             }
         }
 
@@ -67,14 +76,15 @@ namespace LogGrokCore.Diagnostics
 
         public override void Write(string? message)
         {
-            _ = _message.Append(message ?? string.Empty);
+            _ = MessageBuffer.Append(message ?? string.Empty);
         }
 
         public override void WriteLine(string? message)
         {
-            _ = _message.Append(message ?? string.Empty);
-            Logger.Info(_message.ToString());
-            _ = _message.Clear();
+            var buffer = MessageBuffer;
+            _ = buffer.Append(message ?? string.Empty);
+            Logger.Info(buffer.ToString());
+            _ = buffer.Clear();
         }
     }
 }

@@ -21,7 +21,32 @@ low/medium-risk ones were fixed across these commits:
 
 Test count went 89 → 152.
 
-### Phase 9 — data perf/correctness + Y17 dispose (pending commit)
+### Phase 10 — diagnostics (pending commit)
+- **Y1** First-chance exception logging is now gated behind verbose mode
+  (`ExceptionsLogger.SetFirstChanceLoggingEnabled`, wired from `DebugLogging.SetVerbose`). In normal
+  mode the per-throw stack-trace scan in `FirstChanceExceptionsFilter` no longer runs; unhandled /
+  unobserved-task handlers stay always-on so real crashes are still logged.
+- **Y2** `LoggerToTraceListenerAdapter` buffers the in-progress line per thread (`[ThreadStatic]`)
+  instead of one shared `StringBuilder` (concurrent `Trace.Write` no longer garbles lines), and
+  `Flush()` now emits the buffered content instead of being a no-op that wrote a blank console line.
+  (Left as-is: the `StackFrame(3)` caller-name probe — null-safe, only affects log categorization —
+  and `LogLevelFormatter` mapping Error/Fatal both to "ERR", a cosmetic own-log-format choice.)
+- **Y3** `App.OnExit` flushes with a 3 s bounded timeout (`Logger.FlushAll(TimeSpan)` →
+  `LogManager.Flush(timeout)`) before the intentional `TerminateProcess`, so a stuck async target
+  can't hang exit for the full default flush timeout.
+- **Y5** `CrashDumpConfiguration.IsEnabled`/`SettingsChanged` tolerate `SecurityException`/`IOException`
+  on locked-down machines (return safe defaults instead of crashing startup); `SettingsChanged` now
+  compares `DumpType` and the raw (unexpanded) `DumpFolder` in addition to `DumpCount` — reading the
+  folder raw avoids it always looking "changed" and re-elevating; `RequestConfigureElevated` no longer
+  blocks startup for 30 s waiting on the elevated helper; `EntryPoint` also catches `SecurityException`
+  on the HKLM write path.
+  DEFERRED: re-prompting UAC on every launch after the user declines — needs a persisted "declined"
+  flag (new setting + reset when crash dumps are re-enabled).
+- No new unit tests: these paths are AppDomain events / NLog / Trace / HKLM and are not unit-testable;
+  validated by running the app (startup with the changed EntryPoint/registry path is clean, document
+  loads/renders, no crash events).
+
+### Phase 9 — data perf/correctness + Y17 dispose (committed c6c5ea3)
 - **Y17 (dispose)** `MarkedLinesViewModel` now `IDisposable`: named handlers replace the ctor
   lambdas and `Dispose()` unsubscribes from the static `TranslationSource`, the documents
   collection, and every per-document `MarkedLinesChanged`. `MainWindowViewModel.Dispose()` disposes

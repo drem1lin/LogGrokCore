@@ -33,6 +33,10 @@ namespace LogGrokCore.Diagnostics
       }
       
       public static void FlushAll() => LogManager.Flush();
+
+      // Bounded flush: avoids hanging process exit on a stuck async target (LogManager.Flush()
+      // otherwise waits the full default async timeout).
+      public static void FlushAll(System.TimeSpan timeout) => LogManager.Flush(timeout);
             
       public void Debug(string message,  params object[] args) => Log(LogLevel.Debug, message, args); 
      

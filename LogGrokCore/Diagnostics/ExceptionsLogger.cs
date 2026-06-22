@@ -23,8 +23,20 @@ namespace LogGrokCore.Diagnostics
           OnException(exception, "dispatcher unhandled exception");
       }
 
+      private static volatile bool _firstChanceLoggingEnabled;
+
+      /// <summary>
+      /// Enables logging of first-chance exceptions. Off by default because first-chance fires for
+      /// every thrown exception (even ones immediately caught) and the filter walks the formatted
+      /// stack trace per throw — far too expensive for normal operation. Real crashes are still
+      /// reported by the unhandled / unobserved-task handlers regardless of this flag.
+      /// </summary>
+      public static void SetFirstChanceLoggingEnabled(bool enabled) => _firstChanceLoggingEnabled = enabled;
+
       private static void OnFirstChanceException(object? _, FirstChanceExceptionEventArgs args)
       {
+          if (!_firstChanceLoggingEnabled)
+              return;
           OnException(args.Exception, "first chance exception");
       }
 
