@@ -1,8 +1,13 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.Threading;
 
 namespace LogGrokCore.Data.IndexTree
 {
+    // See SimpleLeaf for the concurrency model: the fixed-capacity list is appended by the loader
+    // while the UI reads it; _count is published/consumed with release/acquire semantics so a
+    // reader never observes the count ahead of the element it points at. (LineIndex also serialises
+    // access with a lock, but the leaf is made memory-safe on its own.)
     public sealed class LongsLeaf
         : LeafOrNode<long, LongsLeaf>,
             ILeaf<long, LongsLeaf>
@@ -11,12 +16,15 @@ namespace LogGrokCore.Data.IndexTree
         private readonly long _firstValue;
         private readonly int _firstIndex;
         private readonly List<int> _storage;
-        
+        private int _count;
+        private LongsLeaf? _next;
+
         public LongsLeaf(long firstValue, int valueIndex)
         {
             _storage = new List<int>(Capacity) {0};
             _firstIndex = valueIndex;
             _firstValue = firstValue;
+            Volatile.Write(ref _count, 1);
         }
 
         public LongsLeaf? Add(long value, int valueIndex)
@@ -24,17 +32,19 @@ namespace LogGrokCore.Data.IndexTree
             if (_storage.Count < Capacity)
             {
                 _storage.Add((int)(value - _firstValue));
+                Volatile.Write(ref _count, _storage.Count); // publish the element before the count
                 return null;
             }
 
-            Next = new LongsLeaf(value, valueIndex);
-            return Next;
+            var next = new LongsLeaf(value, valueIndex);
+            Volatile.Write(ref _next, next); // fully constructed leaf published before it is linked
+            return next;
         }
 
         public long this[int index] => _firstValue +_storage[index];
 
-        public int Count => _storage.Count;
-        public LongsLeaf? Next { get; private set; }
+        public int Count => Volatile.Read(ref _count);
+        public LongsLeaf? Next => Volatile.Read(ref _next);
         
         public override long FirstValue => _firstValue;
         public override int MinIndex => _firstIndex;
@@ -51,7 +61,8 @@ namespace LogGrokCore.Data.IndexTree
 
         public override (int index, LongsLeaf leaf) FindByValue(long value)
         {
-            var index = _storage.BinarySearch((int) (value - _firstIndex));
+            var count = Volatile.Read(ref _count);
+            var index = _storage.BinarySearch(0, count, (int) (value - _firstIndex), null);
             return (_firstIndex + (index >= 0 ? index : ~index), this);
         }
 

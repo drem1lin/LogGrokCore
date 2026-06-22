@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Threading;
 using LogGrokCore.Data.Index;
 
 namespace LogGrokCore.Data.IndexTree
@@ -23,6 +24,8 @@ namespace LogGrokCore.Data.IndexTree
             _head = _currentLeaf;
         }
 
+        // Single writer (the loader thread). _head and _count are published with release semantics so
+        // UI reader threads observe a fully constructed leaf/node before the count that refers to it.
         public void Add(T value)
         {
             if (_currentLeaf != null)
@@ -34,26 +37,28 @@ namespace LogGrokCore.Data.IndexTree
             else
             {
                 _currentLeaf = _createFirstLeaf(value);
-                _head = _currentLeaf;
+                Volatile.Write(ref _head, _currentLeaf);
             }
-            _count++;
+            Volatile.Write(ref _count, _count + 1);
         }
 
-        public int Count => _count;
-        
+        public int Count => Volatile.Read(ref _count);
+
         public IEnumerable<T> GetEnumerableFromIndex(int index)
         {
-            return _head == null ? Enumerable.Empty<T>() : _head.GetEnumerableFromIndex(index);
+            var head = Volatile.Read(ref _head);
+            return head == null ? Enumerable.Empty<T>() : head.GetEnumerableFromIndex(index);
         }
 
         public IEnumerable<T> GetEnumerableFromValue(T value)
         {
-            return _head == null ? Enumerable.Empty<T>() : _head.GetEnumerableFromValue(value);
+            var head = Volatile.Read(ref _head);
+            return head == null ? Enumerable.Empty<T>() : head.GetEnumerableFromValue(value);
         }
-        
+
         public int FindIndexByValue(T value)
         {
-            return _head?.GetIndexByValue(value) ?? 0;
+            return Volatile.Read(ref _head)?.GetIndexByValue(value) ?? 0;
         }
 
         private void OnNewLeafCreated(TLeaf newLeaf)
@@ -62,12 +67,12 @@ namespace LogGrokCore.Data.IndexTree
             {
                 case TreeNode<T, TLeaf> headNode:
                     var newNode = AddToTree(headNode, newLeaf);
-                    if (newNode != null) 
-                        _head = new TreeNode<T, TLeaf>(_nodeCapacity, _head, newNode);
+                    if (newNode != null)
+                        Volatile.Write(ref _head, new TreeNode<T, TLeaf>(_nodeCapacity, _head, newNode));
                     break;
                 case TLeaf leaf:
                     var treeHead = new TreeNode<T, TLeaf>(_nodeCapacity, leaf, newLeaf);
-                    _head = treeHead;
+                    Volatile.Write(ref _head, treeHead);
                     break;
             }
             _currentLeaf = newLeaf;
@@ -93,10 +98,11 @@ namespace LogGrokCore.Data.IndexTree
         {
             get
             {
-                Debug.Assert(idx <= _count);
-                if (_head == null) 
+                Debug.Assert(idx <= Volatile.Read(ref _count));
+                var head = Volatile.Read(ref _head);
+                if (head == null)
                     throw new InvalidOperationException("Unable to get element from empty tree.");
-                return _head.GetValue(idx);
+                return head.GetValue(idx);
             }
         }
     }

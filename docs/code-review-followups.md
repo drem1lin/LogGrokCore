@@ -118,7 +118,28 @@ honor `culture`), **Y28** (deleted unused `GlyphRunSurgery`). Build + 152 tests 
 
 ---
 
-### Phase 12 — R2 unparseable-line behaviour (pending commit)
+### Phase 13 — R1 IndexTree memory-ordering hardening (pending commit)
+- **R1** Investigated empirically: the UI read path is index-based (`GetEnumerableFromIndex` via
+  `leaf[i]`/`Count`/`Next`), not the `List` version-checked enumerator, and every list in the tree
+  has fixed capacity (a full leaf/node spills into a new one), so nothing ever reallocates. Under an
+  aggressive stress test (4 readers enumerating + looking up by value while a writer Adds 2M items
+  over ~1 s of real overlap) on x64 there were no exceptions and no torn/out-of-order reads — the
+  x86/x64 strong memory model already orders the element write ahead of the count. So it is
+  practically safe on the target platform but formally undefined (fragile on native ARM64 / future
+  `List` changes).
+- Fix (no locks, no redesign — preserves load throughput): each leaf/node keeps its own `_count`
+  written with `Volatile.Write` *after* the element/sub-node is stored and read with `Volatile.Read`,
+  and the reader-side `BinarySearch` is bounded by it, so a reader can never observe the count ahead
+  of the slot it points at. `IndexTree._head`/`_count` and `SimpleLeaf`/`LongsLeaf.Next` are
+  published/consumed through `Volatile` too. This also covers **Y21** (`_count` cross-thread read).
+  Applied to `SimpleLeaf`, `LongsLeaf`, `TreeNode`, `IndexTree`.
+- Test: `IndexTreeRaceTests` (kept as a stress guard). Note it passes both before and after the fix
+  on x64 — its value is guarding against gross regressions (e.g. making a list reallocate) and
+  documenting the single-writer/multi-reader contract; the memory-ordering correctness it adds is
+  for weak-memory architectures and cannot be demonstrated on x64. Validated on a 2 GB log: loads,
+  renders, no regression. 199 → 200.
+
+### Phase 12 — R2 unparseable-line behaviour (committed 813d073)
 - **R2** Investigated empirically (ran the app on crafted logs) and by tracing the offset math.
   Finding: the review premise ("non-conforming lines vanish; offset drift") does NOT hold — nothing
   is lost. Displayed text is read from the file by offset range, so an unparseable line (e.g. a
@@ -152,16 +173,14 @@ lock-free design with load benchmarks; do NOT add a naive lock).
 
 ## Remaining — RED (high risk, do with care + benchmarks)
 
-### R1. `IndexTree` is mutated on the loader thread while the UI reads it (data race)
-- Files: `LogGrokCore.Data/IndexTree/IndexTree.cs`, `Index/Indexer.cs`, leaf types.
-- `Indexer.Add` runs on the ParsedBufferConsumer background thread; the UI reads via
-  `IndexedLinesProvider` → `IndexTree.GetEnumerableFromIndex/...` during live filtering of a
-  still-loading file. `IndexTree.Add` mutates `_count/_head/_currentLeaf` and leaves append to
-  a `List<T>` — none synchronized (unlike `LineIndex`, which locks).
-- Symptom: intermittent `InvalidOperationException`/torn reads when filtering during load.
-- Why risky: a lock on every `Add` (millions of calls) hurts load throughput; the readers use
-  lazy `yield` enumeration that can't be held under a lock. Needs a snapshot or lock-free
-  design + benchmarks. Do NOT add a naive lock.
+### R1. `IndexTree` loader/UI data race — RESOLVED (Phase 13, memory-ordering hardening)
+- Files: `LogGrokCore.Data/IndexTree/{IndexTree,SimpleLeaf,LongsLeaf,TreeNode}.cs`.
+- The read path is index-based (not the `List` version-checked enumerator) and the lists never
+  reallocate (fixed capacity), so the only real hazard is element-vs-count visibility on weak memory
+  models. Fixed without locks via release/acquire on a self-managed `_count` (reader-side
+  `BinarySearch` bounded by it) and `Volatile` on `_head`/`Next`. Throughput preserved (one volatile
+  store per Add). Empirically the race could not be reproduced on x64 (strong memory model already
+  orders the writes); the fix makes it correct on weak-memory architectures too. Also covers Y21.
 
 ### R2. `LineProcessor` and lines that fail to parse — RESOLVED (Phase 12, works-as-intended)
 - File: `LogGrokCore.Data/LineProcessor.cs`.
@@ -250,8 +269,8 @@ lock-free design with load benchmarks; do NOT add a naive lock).
   component (`Index/IndexerBase.cs:41-47`).
 - Y20. `LineProvider.Fetch` casts the byte span size to `int` — guard/checked for >2GB or huge
   single lines (`LineProvider.cs:30-38`).
-- Y21. `CountIndex` allocates a fresh snapshot on every `Counts` read before finish; mark
-  `IndexTree._count` volatile if read cross-thread (`Index/CountIndex.cs`).
+- Y21. (`IndexTree._count` volatile — DONE in Phase 13.) Remaining: `CountIndex` allocates a fresh
+  snapshot on every `Counts` read before finish (`Index/CountIndex.cs`).
 - Y22. `RegexBasedLineParser.Parse(string)` allocates an `int[]` per call (stackalloc for small
   component counts) — secondary path, hot only if used in a loop.
 - Y23. `StringPool` buckets grow unbounded (slow leak over long sessions with varied line sizes).
