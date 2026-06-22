@@ -118,6 +118,23 @@ honor `culture`), **Y28** (deleted unused `GlyphRunSurgery`). Build + 152 tests 
 
 ---
 
+### Phase 11 — R3 indexer key-number race (pending commit)
+- **R3** `Indexer`: the value factory now assigns key numbers with `Interlocked.Increment` instead
+  of a non-atomic `_currentCount++`, and "is this a new key?" is detected by the return of
+  `NumbersToKeys.TryAdd(keyNumber, key)` (succeeds exactly once per key number) instead of comparing
+  the shared counter before/after `GetOrAdd`. The old comparison could lose increments and
+  misattribute another thread's new key to this call once `SubIndexer`/concurrency is introduced.
+  Behaviour is unchanged for the current single-consumer path.
+- Tests: +5 `IndexerTests` built on a real parser-layout `IndexKey` (same key dedupes to one key
+  number with one component event; distinct/multi-component keys tracked per index;
+  `GetIndexCountForComponent` counts and re-counts correctly — this also back-fills coverage for the
+  Phase 9 **Y19** cache). 191 → 196.
+- Validated by running the app on a 2 GB log: indexing/render path is clean, no crash.
+
+Remaining RED: **R2** (LineProcessor silently drops unparseable lines — needs an explicit design +
+tests) and **R1** (IndexTree mutated on the loader thread while the UI reads it — needs a snapshot or
+lock-free design with load benchmarks; do NOT add a naive lock).
+
 ## Remaining — RED (high risk, do with care + benchmarks)
 
 ### R1. `IndexTree` is mutated on the loader thread while the UI reads it (data race)

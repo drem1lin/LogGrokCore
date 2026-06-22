@@ -2,6 +2,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using LogGrokCore.Data.IndexTree;
 
 namespace LogGrokCore.Data.Index;
@@ -47,24 +48,25 @@ public class Indexer : IndexerBase
     private IndexKeyNum KeyNumbersValueFactory(IndexKey indexKey)
     {
         indexKey.MakeLocalCopy();
-        _currentCount++;
-        return new IndexKeyNum { KeyNum = _currentCount };
+        return new IndexKeyNum { KeyNum = Interlocked.Increment(ref _currentCount) };
     }
 
     private readonly Func<IndexKey, IndexKeyNum> _keyNumbersValueFactory;
 
     public void Add(IndexKey key, int lineNumber)
     {
-        var keyCount = _currentCount;
         var keyNumber = KeysToNumbers.GetOrAdd(key, _keyNumbersValueFactory);
-        var haveNewKey = _currentCount > keyCount;
-        if (haveNewKey)
-            NumbersToKeys.TryAdd(keyNumber, key);
+
+        // NumbersToKeys.TryAdd succeeds exactly once per key number, so its return value is a robust
+        // "is this a brand new key?" signal regardless of how many times GetOrAdd's value factory ran
+        // under contention. The previous detection compared a non-atomic _currentCount before/after,
+        // which could both lose increments and misattribute another thread's new key to this call.
+        var haveNewKey = NumbersToKeys.TryAdd(keyNumber, key);
 
         _lineAndKeyIndex.Add(keyNumber);
-            
+
         var index = Indices.GetOrAdd(keyNumber, static _ => CreateIndexTree());
-            
+
         index.Add(lineNumber);
         CountIndex.Add(lineNumber, Indices);
 
