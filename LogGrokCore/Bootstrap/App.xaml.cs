@@ -98,7 +98,9 @@ namespace LogGrokCore.Bootstrap
             container.RegisterDelegate(ApplicationSettings.Instance);
             container.Register<MainWindowViewModel>(Reuse.Singleton);
             container.Register<SearchAutocompleteCache>(Reuse.Singleton); 
-            container.Register<MarkedLinesViewModel>();
+            // Disposable transient: not tracked by the container; its owner (the singleton
+            // MainWindowViewModel) creates it once via a factory and disposes it explicitly.
+            container.Register<MarkedLinesViewModel>(setup: Setup.With(allowDisposableTransient: true));
             container.Register<MainWindow>();
         }
 

@@ -38,12 +38,35 @@ public abstract class IndexerBase : IDisposable
     public IndexTree<int, SimpleLeaf<int>> GetIndex(IndexKeyNum key) => Indices[key];
     
     
+    // The set of keys matching a component value only changes when new keys are added (the index is
+    // append-only), so cache the matching keys and rescan only when the key count grows. The per-key
+    // line counts are always read live, so counts stay correct while a file is still loading.
+    private readonly ConcurrentDictionary<(int componentIndex, string value), (int keyCountSnapshot, IndexKeyNum[] keys)>
+        _componentKeyCache = new();
+
     public int GetIndexCountForComponent(int componentIndex, string componentValue)
     {
-        return Indices
-            .Where(keyValuePair =>
-                NumbersToKeys[keyValuePair.Key].GetComponent(componentIndex).SequenceEqual(componentValue.AsSpan()))
-            .Sum(kv => kv.Value.Count);
+        var currentKeyCount = Indices.Count;
+        var cacheKey = (componentIndex, componentValue);
+
+        if (!_componentKeyCache.TryGetValue(cacheKey, out var cached) || cached.keyCountSnapshot != currentKeyCount)
+        {
+            var matching = Indices.Keys
+                .Where(key =>
+                    NumbersToKeys[key].GetComponent(componentIndex).SequenceEqual(componentValue.AsSpan()))
+                .ToArray();
+            cached = (currentKeyCount, matching);
+            _componentKeyCache[cacheKey] = cached;
+        }
+
+        var sum = 0;
+        foreach (var key in cached.keys)
+        {
+            if (Indices.TryGetValue(key, out var index))
+                sum += index.Count;
+        }
+
+        return sum;
     }
 
     private protected static IndexTree<int, SimpleLeaf<int>> CreateIndexTree()

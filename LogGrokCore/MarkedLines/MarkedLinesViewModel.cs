@@ -2,14 +2,14 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Collections.Specialized;
+using System.ComponentModel;
 using System.Linq;
-using System.Reflection.Metadata;
-using System.Reflection.PortableExecutable;
 using System.Windows.Data;
 
 namespace LogGrokCore.MarkedLines
 {
-    public class MarkedLinesViewModel : ViewModelBase
+    public class MarkedLinesViewModel : ViewModelBase, IDisposable
     {
         private readonly ObservableCollection<MarkedLineViewModel> _markedLines = new();
         private readonly ObservableCollection<DocumentViewModel> _documents;
@@ -41,16 +41,11 @@ namespace LogGrokCore.MarkedLines
             _documents = documents;
 
             // Title is read from resources, so refresh it when the UI language changes.
-            Localization.TranslationSource.Instance.PropertyChanged +=
-                (_, _) => InvokePropertyChanged(nameof(Title));
+            Localization.TranslationSource.Instance.PropertyChanged += OnTranslationSourcePropertyChanged;
 
             SubscribeToNewDocumentChanges(_documents);
 
-            _documents.CollectionChanged += (_, _) =>
-            {
-                SubscribeToNewDocumentChanges(_documents);
-                UpdateLinesCollection();
-            };
+            _documents.CollectionChanged += OnDocumentsCollectionChanged;
 
             CopyLinesCommand = new DelegateCommand(
                 o =>
@@ -79,6 +74,24 @@ namespace LogGrokCore.MarkedLines
         }
         
         public event Action<DocumentViewModel, int>? NavigationRequested;
+
+        private void OnTranslationSourcePropertyChanged(object? sender, PropertyChangedEventArgs e) =>
+            InvokePropertyChanged(nameof(Title));
+
+        private void OnDocumentsCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
+        {
+            SubscribeToNewDocumentChanges(_documents);
+            UpdateLinesCollection();
+        }
+
+        public void Dispose()
+        {
+            Localization.TranslationSource.Instance.PropertyChanged -= OnTranslationSourcePropertyChanged;
+            _documents.CollectionChanged -= OnDocumentsCollectionChanged;
+            foreach (var document in _alreadySubscribed)
+                document.MarkedLinesChanged -= UpdateLinesCollection;
+            _alreadySubscribed.Clear();
+        }
 
         private void SubscribeToNewDocumentChanges(ObservableCollection<DocumentViewModel> documents)
         {

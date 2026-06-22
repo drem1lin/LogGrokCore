@@ -328,6 +328,7 @@ namespace LogGrokCore
         public void Dispose()
         {
             Documents.Clear();
+            MarkedLinesViewModel.Dispose();
         }
     }
 }

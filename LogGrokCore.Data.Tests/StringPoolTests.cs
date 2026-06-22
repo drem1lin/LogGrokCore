@@ -42,5 +42,30 @@ namespace LogGrokCore.Data.Tests
             var notFromPool = new string('\0', 17); // 17 is never a bucket size
             Assert.ThrowsExactly<InvalidOperationException>(() => pool.Return(notFromPool));
         }
+
+        [TestMethod]
+        public void Return_BeyondCap_StopsGrowing()
+        {
+            var pool = new StringPool();
+            _ = pool.Rent(50); // create the size-64 bucket
+
+            for (var i = 0; i < 200; i++)
+                pool.Return(new string('\0', 64));
+
+            // Regression: the bag used to retain every returned string forever; now capped.
+            Assert.AreEqual(64, pool.GetPooledCount(50));
+        }
+
+        [TestMethod]
+        public void Rent_DecrementsPooledCount()
+        {
+            var pool = new StringPool();
+            var rented = Enumerable.Range(0, 5).Select(_ => pool.Rent(50)).ToList();
+            foreach (var s in rented) pool.Return(s);
+
+            Assert.AreEqual(5, pool.GetPooledCount(50));
+            _ = pool.Rent(50);
+            Assert.AreEqual(4, pool.GetPooledCount(50));
+        }
     }
 }

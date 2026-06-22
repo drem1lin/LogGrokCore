@@ -27,7 +27,12 @@ namespace LogGrokCore.Data
             var count = values.Length;
             var (lastLineOffset, lastLineLength) = _lineIndex.GetLine(start + count - 1);
 
-            var size = (int)(lastLineOffset + lastLineLength - startOffset);
+            var sizeLong = lastLineOffset + lastLineLength - startOffset;
+            if (sizeLong is < 0 or > int.MaxValue)
+                throw new InvalidOperationException(
+                    $"Cannot fetch lines [{start}..{start + count - 1}]: byte range {sizeLong} is out of Int32 range.");
+
+            var size = (int)sizeLong;
 
             using var owner = MemoryPool<byte>.Shared.Rent(size);
 

@@ -21,7 +21,28 @@ low/medium-risk ones were fixed across these commits:
 
 Test count went 89 → 152.
 
-### Phase 8 — reliability (pending commit)
+### Phase 9 — data perf/correctness + Y17 dispose (pending commit)
+- **Y17 (dispose)** `MarkedLinesViewModel` now `IDisposable`: named handlers replace the ctor
+  lambdas and `Dispose()` unsubscribes from the static `TranslationSource`, the documents
+  collection, and every per-document `MarkedLinesChanged`. `MainWindowViewModel.Dispose()` disposes
+  it. Because it is a disposable transient created via a factory, its DryIoc registration now uses
+  `Setup.With(allowDisposableTransient: true)` (the owner disposes it) — without this the container
+  throws `RegisteredDisposableTransientWontBeDisposedByContainer` at startup.
+- **Y19** `IndexerBase.GetIndexCountForComponent` caches the matching `IndexKeyNum` set per
+  (component, value) and rescans only when the key count grows (append-only index); per-key counts
+  are always summed live, so counts stay correct while loading.
+- **Y20** `LineProvider.Fetch` validates the byte range against `Int32` and throws a clear
+  `InvalidOperationException` instead of silently overflowing the `(int)` cast (>2 GB / huge line).
+- **Y23** `StringPool` bounds each size bucket (`MaxPooledPerBucket`) so returned buffers past the
+  cap are dropped for GC instead of being retained forever (slow leak over long sessions).
+- **Y22 (skipped)** the `int[]` in `RegexBasedLineParser.Parse(string)` backs the returned
+  `ParseResult` and is read later by `LineViewModel`; it outlives the call, so the suggested
+  stackalloc would be a use-after-free. Left as-is.
+- Tests: +2 `StringPool` cap, +1 `LineProvider` range guard (188 → 191).
+- Validated by running the app on a 2 GB log after fixing the startup crash the Y17 change first
+  introduced: document loads/renders, app closes cleanly, no crash events.
+
+### Phase 8 — reliability (committed b138b36)
 - **Y12** `SearchDocumentViewModel.SetIsSearching` wrapped in try/catch (async void) and the
   min-show delay clamped via the extracted, unit-tested `RemainingMinShowDelay` (never negative);
   `ListView.ScheduleMandatoryRemeasure` wrapped in try/catch.
