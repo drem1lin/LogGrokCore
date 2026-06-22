@@ -79,6 +79,16 @@ namespace LogGrokCore.Data
                     return;
                 }
 
+                // Parsing failed: this physical line does not start a new record. We intentionally
+                // do NOT index or count it and do NOT advance _currentOffset, so its decoded chars
+                // are overwritten by the next line. It is not lost from the view: LineProvider
+                // renders each record from its file offset up to the next record's offset, so an
+                // unparseable line (e.g. a stack-trace continuation) is shown as part of the
+                // preceding record. Only when no record has started in this buffer yet
+                // (_currentOffset == 0) is there nothing to attach it to, so advance the buffer's
+                // logical start past it. (_bufferOffset is a reference point that cancels out in
+                // LineOffsetFromBufferStart = lineOffset - _bufferOffset, so omitting the CR/LF
+                // bytes here does not drift the recorded offsets.)
                 if (_currentOffset == 0)
                 {
                     _bufferOffset += lineData.Length;

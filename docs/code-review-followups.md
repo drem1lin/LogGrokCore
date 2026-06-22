@@ -21,7 +21,7 @@ low/medium-risk ones were fixed across these commits:
 
 Test count went 89 → 152.
 
-### Phase 10 — diagnostics (pending commit)
+### Phase 10 — diagnostics (committed 73e507a)
 - **Y1** First-chance exception logging is now gated behind verbose mode
   (`ExceptionsLogger.SetFirstChanceLoggingEnabled`, wired from `DebugLogging.SetVerbose`). In normal
   mode the per-throw stack-trace scan in `FirstChanceExceptionsFilter` no longer runs; unhandled /
@@ -118,7 +118,22 @@ honor `culture`), **Y28** (deleted unused `GlyphRunSurgery`). Build + 152 tests 
 
 ---
 
-### Phase 11 — R3 indexer key-number race (pending commit)
+### Phase 12 — R2 unparseable-line behaviour (pending commit)
+- **R2** Investigated empirically (ran the app on crafted logs) and by tracing the offset math.
+  Finding: the review premise ("non-conforming lines vanish; offset drift") does NOT hold — nothing
+  is lost. Displayed text is read from the file by offset range, so an unparseable line (e.g. a
+  stack-trace continuation) is rendered as part of the preceding record; a leading non-conforming
+  line shows as an index-less row; a file with no parseable line at all falls back to the single
+  `TEXT` column format. `_bufferOffset` is a reference point that cancels in
+  `LineOffsetFromBufferStart`, so the `_currentOffset == 0` branch omitting CR/LF bytes does not
+  drift recorded offsets. Conclusion: current behaviour is correct and intentional.
+- Action taken (no behaviour change): added a clarifying comment in `LineProcessor` documenting the
+  "merge via offset range" design, and `LineProcessorTests` (end-to-end through Loader →
+  LineProcessor → ParsedBufferConsumer → LineIndex → LineProvider) that lock it in: parseable lines
+  each start a record; a continuation does not start a record and is shown with the preceding record;
+  multiple continuations merge into one record. **R2 closed as works-as-intended.** 196 → 199.
+
+### Phase 11 — R3 indexer key-number race (committed 351421c)
 - **R3** `Indexer`: the value factory now assigns key numbers with `Interlocked.Increment` instead
   of a non-atomic `_currentCount++`, and "is this a new key?" is detected by the return of
   `NumbersToKeys.TryAdd(keyNumber, key)` (succeeds exactly once per key number) instead of comparing
@@ -148,14 +163,16 @@ lock-free design with load benchmarks; do NOT add a naive lock).
   lazy `yield` enumeration that can't be held under a lock. Needs a snapshot or lock-free
   design + benchmarks. Do NOT add a naive lock.
 
-### R2. `LineProcessor` silently drops lines that fail to parse
-- File: `LogGrokCore.Data/LineProcessor.cs:73-86`.
-- When `TryParse` fails and `_currentOffset != 0`, the line is decoded into the buffer but not
-  indexed/counted, and `_currentOffset`/`_bufferOffset` bookkeeping only handles the
-  `_currentOffset == 0` case → non-conforming lines vanish; possible offset drift.
-- Why risky: may be partly intentional (multi-line records); changing it touches parsing/index
-  correctness and there are no `LineProcessor` tests. Needs explicit design for unparseable
-  lines + tests first.
+### R2. `LineProcessor` and lines that fail to parse — RESOLVED (Phase 12, works-as-intended)
+- File: `LogGrokCore.Data/LineProcessor.cs`.
+- Original concern: "non-conforming lines vanish; possible offset drift."
+- Investigated empirically + by tracing the math: nothing vanishes. Display text is read from the
+  file by offset range, so an unparseable line is shown as part of the preceding record (correct
+  multi-line-record behaviour); leading non-conforming lines show as an index-less row; an all-
+  unparseable file falls back to the single `TEXT` column format. `_bufferOffset` cancels out in
+  `LineOffsetFromBufferStart`, so the `_currentOffset == 0` branch does not drift offsets.
+- Action: clarifying comment in `LineProcessor` + end-to-end `LineProcessorTests` locking in the
+  behaviour. No behaviour change.
 
 ### R3. `Indexer._currentCount++` + GetOrAdd value-factory race
 - File: `LogGrokCore.Data/Index/Indexer.cs:47-62`.
