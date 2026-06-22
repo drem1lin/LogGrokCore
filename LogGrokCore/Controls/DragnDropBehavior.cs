@@ -92,21 +92,22 @@ namespace LogGrokCore.Controls
         private static void OnDropCommandChanged(DependencyObject d, DependencyPropertyChangedEventArgs args)
         {
             var element = (UIElement)d;
-            
-            var handler = new RoutedEventHandler((_, args) => OnDropEventArrived(element, args));
-            
-            if (args.NewValue == null)
-                element.RemoveHandler(FileDroppedEvent, handler);
-            else 
-                element.AddHandler(FileDroppedEvent, handler);
+
+            // Use the static method group so the delegate handed to RemoveHandler compares
+            // equal to the one added earlier (a freshly captured lambda never would).
+            if (args.OldValue == null && args.NewValue != null)
+                element.AddHandler(FileDroppedEvent, (RoutedEventHandler)OnDropEventArrived);
+            else if (args.OldValue != null && args.NewValue == null)
+                element.RemoveHandler(FileDroppedEvent, (RoutedEventHandler)OnDropEventArrived);
         }
-        
-        private static void OnDropEventArrived(UIElement element, RoutedEventArgs  args)
+
+        private static void OnDropEventArrived(object sender, RoutedEventArgs args)
         {
+            var element = (UIElement)sender;
             var arguments = (FileDroppedEventArgs)args;
             var command = GetDropCommand(element);
 
-            command.Execute(arguments.Files);
+            command?.Execute(arguments.Files);
         }
 
         private static void OnDropped(object source,  DragEventArgs args)

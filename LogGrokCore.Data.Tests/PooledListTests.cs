@@ -1,3 +1,4 @@
+using System;
 using LogGrokCore.Data;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -56,6 +57,47 @@ namespace LogGrokCore.Data.Tests
             Assert.AreEqual(1, list.IndexOf(null));
             Assert.IsTrue(list.Contains("a"));
             Assert.IsFalse(list.Contains("z"));
+        }
+
+        [TestMethod]
+        public void Indexer_WithinCount_GetAndSet()
+        {
+            using var list = new PooledList<int> { 1, 2, 3 };
+
+            Assert.AreEqual(2, list[1]);
+            list[1] = 42;
+            Assert.AreEqual(42, list[1]);
+        }
+
+        [TestMethod]
+        public void Indexer_Get_AtCount_Throws()
+        {
+            using var list = new PooledList<int> { 1, 2, 3 };
+            Assert.ThrowsExactly<ArgumentOutOfRangeException>(() => _ = list[3]);
+        }
+
+        [TestMethod]
+        public void Indexer_Get_Negative_Throws()
+        {
+            using var list = new PooledList<int> { 1, 2, 3 };
+            Assert.ThrowsExactly<ArgumentOutOfRangeException>(() => _ = list[-1]);
+        }
+
+        [TestMethod]
+        public void Indexer_Set_AtCount_Throws()
+        {
+            using var list = new PooledList<int> { 1, 2, 3 };
+            Assert.ThrowsExactly<ArgumentOutOfRangeException>(() => list[3] = 0);
+        }
+
+        [TestMethod]
+        public void Indexer_WithinCapacityButBeyondCount_Throws()
+        {
+            // Capacity is 10 but only one element added: index 1 is reserved capacity,
+            // not a valid element, and must not be silently readable.
+            using var list = new PooledList<int>(10) { 7 };
+            Assert.AreEqual(1, list.Count);
+            Assert.ThrowsExactly<ArgumentOutOfRangeException>(() => _ = list[1]);
         }
     }
 }

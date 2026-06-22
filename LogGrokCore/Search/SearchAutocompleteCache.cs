@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text.Json;
@@ -28,12 +29,12 @@ namespace LogGrokCore.Search
             {
                 if (!File.Exists(fullPath)) return;
                 using var stream = File.OpenRead(fullPath);
-                _items = JsonSerializer.Deserialize<List<AutocompleteItem>>(stream) 
+                _items = JsonSerializer.Deserialize<List<AutocompleteItem>>(stream)
                          ?? new List<AutocompleteItem>();
             }
-            catch (Exception)
+            catch (Exception e) when (e is IOException or JsonException or UnauthorizedAccessException)
             {
-                // ignored
+                Trace.TraceWarning($"Failed to load autocomplete cache from '{fullPath}': {e.Message}");
             }
         }
         
@@ -45,9 +46,9 @@ namespace LogGrokCore.Search
                 var options = new JsonSerializerOptions { WriteIndented = true };
                 JsonSerializer.Serialize(createStream, _items, options);
             }
-            catch (Exception)
+            catch (Exception e) when (e is IOException or JsonException or UnauthorizedAccessException)
             {
-                // ignored
+                Trace.TraceWarning($"Failed to save autocomplete cache to '{_cacheFileName}': {e.Message}");
             }
         }
         

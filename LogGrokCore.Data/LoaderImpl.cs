@@ -31,8 +31,7 @@ namespace LogGrokCore.Data
 
             var buffer = ArrayPool<byte>.Shared.Rent(_bufferSize);
             var bufferSize = _bufferSize;
-            var (rPattern, nPattern, minusPattern, andPattern) = GetPatterns(cr, lf);
-            
+
             try
             {
                 var dataOffsetFromBufferStart = 0;
@@ -159,35 +158,6 @@ namespace LogGrokCore.Data
             {
                 ArrayPool<byte>.Shared.Return(buffer);
             }
-        }
-
-        private (ulong rPattern, ulong nPattern, ulong minusPattern, ulong andPattern) 
-            GetPatterns(ReadOnlySpan<byte> r, ReadOnlySpan<byte> n)
-        {
-            ulong ToLongBe(byte[] value)
-            {
-                return BitConverter.ToUInt64(((IEnumerable<byte>)value).Reverse().ToArray(), value.Length - sizeof(ulong));
-            }
-            
-            var patternLength = r.Length;
-            
-            var rPattern = new byte[8];
-            var nPattern = new byte[8];
-            var minusPattern = new byte[8];
-            var andPattern = new byte[8];
-            
-            for (var idx = 0; idx < 8; idx += patternLength)
-            {
-                r.CopyTo(rPattern.AsSpan(idx));
-                n.CopyTo(nPattern.AsSpan(idx));
-                minusPattern[idx + patternLength - 1] = 0x01;
-                andPattern[idx] = 0x80;
-            }
-
-            return (BitConverter.ToUInt64(rPattern, 0), 
-                    BitConverter.ToUInt64(nPattern, 0), 
-                    ToLongBe(minusPattern),
-                    ToLongBe(andPattern));
         }
     }
 }

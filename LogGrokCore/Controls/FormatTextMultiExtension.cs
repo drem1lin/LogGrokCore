@@ -15,7 +15,7 @@ namespace LogGrokCore.Controls
         public object Convert(object[] values, Type targetType, object parameter, CultureInfo culture)
         {
             if (values.Length >= 2 && values[0] is string text && values[1] is string format)
-                return string.Format(format, text);
+                return string.Format(culture, format, text);
             return values.Length > 0 ? values[0] : string.Empty;
         }
 

@@ -9,7 +9,7 @@ namespace LogGrokCore.Controls
         protected override object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
             if (value is string text && parameter is string format)
-                return string.Format(format, text);
+                return string.Format(culture, format, text);
             return value;
         }
 

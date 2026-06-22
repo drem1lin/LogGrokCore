@@ -1,5 +1,6 @@
 using System;
 using System.Globalization;
+using System.Windows;
 using System.Windows.Data;
 
 namespace LogGrokCore.Controls
@@ -10,8 +11,9 @@ namespace LogGrokCore.Controls
         {
             return (value, parameter) switch
                 {
-                    (string val, string param) when int.TryParse(param, out var intParam) 
+                    (string val, string param) when int.TryParse(param, out var intParam)
                         => MakeShortString(val, intParam),
+                    _ when value == DependencyProperty.UnsetValue => Binding.DoNothing,
                     _ => throw new InvalidOperationException("Unsupported parameters: value must be string"+
                         $"parameter must be int; actual: value={value}, parameter={parameter}")
                 };

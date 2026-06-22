@@ -108,12 +108,21 @@ public class PooledList<T> : IList<T>, IList, IDisposable
             
     public bool IsFixedSize => false;
 
-    public T this[int index] 
+    public T this[int index]
     {
-        get => _data[index];
-        set => _data[index] = value;
-                
-    } 
+        get
+        {
+            if ((uint)index >= (uint)_count)
+                throw new ArgumentOutOfRangeException(nameof(index));
+            return _data[index];
+        }
+        set
+        {
+            if ((uint)index >= (uint)_count)
+                throw new ArgumentOutOfRangeException(nameof(index));
+            _data[index] = value;
+        }
+    }
     public void Dispose()
     {
         ArrayPool<T>.Shared.Return(_data);

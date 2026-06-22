@@ -21,8 +21,10 @@ namespace LogGrokCore.Data
             var loaderImpl = new LoaderImpl(BufferSize, lineProcessor);
             _cancellationTokenSource = new CancellationTokenSource();
             
-            Trace.TraceInformation($"Start loading {logFile.FilePath}.");
-            var timeStamp = DateTime.Now;
+            var fileSize = logFile.FileSize;
+            Trace.TraceInformation(
+                $"Start loading {logFile.FilePath}, size: {fileSize:N0} bytes, encoding: {encoding.WebName}.");
+            var stopwatch = Stopwatch.StartNew();
             _loadingTask = Task.Factory.StartNew(
                 () =>
                 {
@@ -33,15 +35,21 @@ namespace LogGrokCore.Data
                 })
                 .ContinueWith(t =>
                 {
+                    var elapsed = stopwatch.Elapsed;
                     switch(t.Status)
                     {
-                        case TaskStatus.RanToCompletion: 
-                            Trace.TraceInformation($"Loaded {logFile.FilePath}, time spent: {DateTime.Now - timeStamp}.");
-                            break; 
-                        case TaskStatus.Canceled: logger.LogInformation($"Loading of {logFile.FilePath} was cancelled.");
+                        case TaskStatus.RanToCompletion:
+                            var mbPerSec = elapsed.TotalSeconds > 0
+                                ? fileSize / (1024.0 * 1024.0) / elapsed.TotalSeconds
+                                : 0;
+                            Trace.TraceInformation(
+                                $"Loaded {logFile.FilePath}, size: {fileSize:N0} bytes, " +
+                                $"time spent: {elapsed}, throughput: {mbPerSec:N1} MB/s.");
                             break;
-                        default: 
-                            Trace.TraceError($"Unexpected loading result {t.Status} while loading {logFile.FilePath}.");
+                        case TaskStatus.Canceled: logger.LogInformation($"Loading of {logFile.FilePath} was cancelled after {elapsed}.");
+                            break;
+                        default:
+                            Trace.TraceError($"Unexpected loading result {t.Status} while loading {logFile.FilePath}: {t.Exception?.GetBaseException().Message}");
                             break;
                     }
                 });
