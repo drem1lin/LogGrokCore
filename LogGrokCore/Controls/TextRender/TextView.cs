@@ -347,16 +347,24 @@ public class TextView : Control, IClippingRectChangesAware
         }
         
         var outlineData = _outlineData;
-        var visibleLineIndices = 
-            outlineData == null || outlineData.CollapsibleRegionsMachine.LineCount == _textLines.Count
-            ? Enumerable.Range(0, _textLines.Count)
-            : outlineData.CollapsibleRegionsMachine.Select((oi) => oi.index).ToList();
-        
-        var visibleLines = visibleLineIndices.Select(idx => (
-            textLine: _textLines[idx],
-            isCollapsible: outlineData?.CollapsibleLineIndices.Contains(idx) ?? false));
+        var lineCount = _textLines.Count;
+        List<(GlyphLine glyphLine, bool isCollapsible)> visibleLines;
+        if (outlineData == null || outlineData.CollapsibleRegionsMachine.LineCount == lineCount)
+        {
+            visibleLines = new List<(GlyphLine, bool)>(lineCount);
+            for (var idx = 0; idx < lineCount; idx++)
+                visibleLines.Add((_textLines[idx],
+                    outlineData?.CollapsibleLineIndices.Contains(idx) ?? false));
+        }
+        else
+        {
+            var machine = outlineData.CollapsibleRegionsMachine;
+            visibleLines = new List<(GlyphLine, bool)>(machine.LineCount);
+            foreach (var (_, idx) in machine)
+                visibleLines.Add((_textLines[idx], outlineData.CollapsibleLineIndices.Contains(idx)));
+        }
 
-        _textControl.TextLines = visibleLines.ToList();
+        _textControl.TextLines = visibleLines;
         _textControl.Measure(constraint);
 
         var measuredSize = new Size(_textControl.DesiredSize.Width, _textControl.DesiredSize.Height);

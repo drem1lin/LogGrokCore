@@ -161,10 +161,9 @@ public class TextControl : Control
         foreach (var textLine in textLines)
         {
             var glyphLine = textLine.glyphLine;
-            var line = glyphLine.Text.ToString();
-            var matches = regex.Matches(line).ToList();
-            foreach (var match in matches.Where(m => m.Length > 0))
+            foreach (var match in regex.EnumerateMatches(glyphLine.Text.Span))
             {
+                if (match.Length == 0) continue;
                 var startPoint = GetHorizontalOffset(textLine);
                 var rect = glyphLine.GetTextBounds(new Point(startPoint, y), match.Index, match.Length);
                 var geometry = GeometryFromRect(rect);

@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Concurrent;
 using System.Text.RegularExpressions;
 
 namespace LogGrokCore.Search
@@ -27,11 +28,17 @@ namespace LogGrokCore.Search
             return new(Pattern, IsCaseSensitive, UseRegex);
         }
 
+        // Compiling a Regex (especially with RegexOptions.Compiled) is expensive and happens
+        // on the UI thread per committed search; cache by effective (pattern, options).
+        private static readonly ConcurrentDictionary<(string pattern, RegexOptions options), Regex> RegexCache = new();
+
         public Regex GetRegex(RegexOptions regexAdditionalOptions)
         {
-            var regexOptions = IsCaseSensitive ?  RegexOptions.None : RegexOptions.None | RegexOptions.IgnoreCase;
+            var regexOptions = IsCaseSensitive ? RegexOptions.None : RegexOptions.IgnoreCase;
+            regexOptions |= regexAdditionalOptions;
             var pattern = UseRegex ? Pattern : Regex.Escape(Pattern);
-            return new Regex(pattern, regexOptions | regexAdditionalOptions);
+            return RegexCache.GetOrAdd((pattern, regexOptions),
+                static key => new Regex(key.pattern, key.options));
         }
 
         public bool Equals(SearchPattern other)

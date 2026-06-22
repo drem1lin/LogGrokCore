@@ -62,6 +62,11 @@ public class CollapsibleRegionsMachine : IEnumerable<(Outline outline, int index
 
     private readonly List<(Outline, int)> _regions;
     private readonly (bool isCollapsed, int start, int length)[] _collapsibleRegions;
+    // Region membership (start/end line positions) never changes after construction — only the
+    // isCollapsed flag toggles — so map position -> region index once instead of rebuilding two
+    // dictionaries on every Update().
+    private readonly Dictionary<int, int> _regionIndexByStart;
+    private readonly Dictionary<int, int> _regionIndexByEnd;
     private readonly Action<int> _toggleAction;
 
     private HashSet<int> _collapsedLines = new ();
@@ -76,11 +81,20 @@ public class CollapsibleRegionsMachine : IEnumerable<(Outline outline, int index
         {
             _collapsedLines = collapsedLines;
         }
-        
-        _collapsibleRegions = collapsibleRegions.Select(region 
+
+        _collapsibleRegions = collapsibleRegions.Select(region
             => (_collapsedLines.Contains(region.start), region.start, region.length)).ToArray();
         _regions = new List<(Outline, int)>(collapsibleRegions.Length);
-        
+
+        _regionIndexByStart = new Dictionary<int, int>(_collapsibleRegions.Length);
+        _regionIndexByEnd = new Dictionary<int, int>(_collapsibleRegions.Length);
+        for (var i = 0; i < _collapsibleRegions.Length; i++)
+        {
+            var (_, start, length) = _collapsibleRegions[i];
+            _regionIndexByStart.Add(start, i);
+            _regionIndexByEnd.Add(start + length - 1, i);
+        }
+
         _toggleAction = Toggle;
         Update();
     }
@@ -114,21 +128,17 @@ public class CollapsibleRegionsMachine : IEnumerable<(Outline outline, int index
         
         _regions.Clear();
         _collapsedLines.Clear();
-        var starts = _collapsibleRegions.ToDictionary(r => r.start, r => r);
-        var ends = _collapsibleRegions.ToDictionary(r => r.start + r.length - 1, r => r);
-        
+
         for (var i = 0; i < _lineCount; i++)
         {
-            if (!starts.TryGetValue(i, out var rangeStart))
-            {
-                rangeStart = default;
-            }
-            
-            if (!ends.TryGetValue(i, out var rangeEnd))
-            {
-                rangeEnd = default;
-            }
-            
+            var rangeStart = _regionIndexByStart.TryGetValue(i, out var startIndex)
+                ? _collapsibleRegions[startIndex]
+                : default;
+
+            var rangeEnd = _regionIndexByEnd.TryGetValue(i, out var endIndex)
+                ? _collapsibleRegions[endIndex]
+                : default;
+
             var outline = (rangeStart, rangeEnd) switch
             {
                 ((false,0,0), (false,0,0)) => Outline.None,

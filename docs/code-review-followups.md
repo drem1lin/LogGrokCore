@@ -21,7 +21,24 @@ low/medium-risk ones were fixed across these commits:
 
 Test count went 89 → 152.
 
-### Phase 6 — safe quick wins (pending commit)
+### Phase 7 — render hot-path perf (pending commit)
+- **Y7** `ColorSettings` regexes compiled with `RegexOptions.CultureInvariant`;
+  `BaseLogListViewItem.OnContentChanged` short-circuits when there are no color rules.
+- **Y8** `SearchPattern.GetRegex` caches the compiled `Regex` by (effective pattern, options)
+  instead of recompiling on the UI thread per committed search.
+- **Y9** `TextControl` search-highlight geometry uses `regex.EnumerateMatches(span)` — no
+  per-line `Text.ToString()` + `Matches().ToList()`.
+- **Y10** `CollapsibleRegionsMachine` builds position→region-index maps once in the ctor
+  instead of rebuilding two dictionaries on every `Update()`/toggle.
+- **Y11** `TextView.MeasureOverride` builds the visible-lines list in a single pass (no chained
+  LINQ / double `ToList`); `GuideLinesControl.OnRender` pushes one `GuidelineSet` per render
+  instead of allocating one per line.
+- Tests: +4 SearchPattern caching, +6 CollapsibleRegionsMachine, +3 ColorSettings (168 → 181).
+- Validated by running the app on a 2 GB log: load, rule coloring, text/measure rendering and
+  an active search all work; no crash. (Y9 highlight geometry / Y11 rendering have no unit
+  coverage — render paths are validated only by running.)
+
+### Phase 6 — safe quick wins (committed 468f0f9)
 Addressed the low-risk batch: **Y4** (structured open/duration/throughput logs in
 `Loader`), **Y15** (`SearchAutocompleteCache` specific catches + `Trace.TraceWarning`),
 **Y16** (`DragnDropBehavior` handler now a static method group so `RemoveHandler` matches),

@@ -81,7 +81,8 @@ namespace LogGrokCore.Colors
             ColorRule Convert(Configuration.ColorRule rule)
             {
                 return new ColorRule(
-                    CachedRegexes.GetOrAdd(rule.RegexString, s => new Regex(s, RegexOptions.Compiled)),
+                    CachedRegexes.GetOrAdd(rule.RegexString,
+                        s => new Regex(s, RegexOptions.Compiled | RegexOptions.CultureInvariant)),
                     CachedBruches.GetOrAdd(rule.ForegroundColor, CreateBrush),
                     CachedBruches.GetOrAdd(rule.BackgroundColor, CreateBrush));
             }

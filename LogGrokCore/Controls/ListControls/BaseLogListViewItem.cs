@@ -135,7 +135,7 @@ namespace LogGrokCore.Controls.ListControls
             base.OnContentChanged(oldContent, newContent);
             UpdateIsCurrentProperty();
             var colorSettings = ColorSettings.GetColorSettings(this);
-            if (oldContent == newContent || colorSettings == null) return;
+            if (oldContent == newContent || colorSettings == null || colorSettings.Rules.Count == 0) return;
             var text = newContent?.ToString();
             if (text == null) return;
             ColorSettings.ColorRule? rule = null;

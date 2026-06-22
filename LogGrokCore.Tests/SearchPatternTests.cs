@@ -70,5 +70,44 @@ namespace LogGrokCore.Tests
             Assert.AreEqual(a.GetHashCode(), b.GetHashCode());
             Assert.AreNotEqual(a, c);
         }
+
+        [TestMethod]
+        public void GetRegex_SamePatternAndOptions_ReturnsCachedInstance()
+        {
+            var pattern = new SearchPattern("cache-me", false, useRegex: false);
+            var first = pattern.GetRegex(RegexOptions.Compiled);
+            var second = pattern.GetRegex(RegexOptions.Compiled);
+
+            Assert.AreSame(first, second, "compiled regex must be cached, not rebuilt per call");
+        }
+
+        [TestMethod]
+        public void GetRegex_EqualPatterns_ShareCachedInstance()
+        {
+            var a = new SearchPattern("shared", false, useRegex: false);
+            var b = new SearchPattern("shared", false, useRegex: false);
+
+            Assert.AreSame(a.GetRegex(RegexOptions.Compiled), b.GetRegex(RegexOptions.Compiled));
+        }
+
+        [TestMethod]
+        public void GetRegex_DifferentOptions_ReturnsDifferentInstances()
+        {
+            var pattern = new SearchPattern("opts", false, useRegex: false);
+
+            Assert.AreNotSame(
+                pattern.GetRegex(RegexOptions.Compiled),
+                pattern.GetRegex(RegexOptions.None));
+        }
+
+        [TestMethod]
+        public void GetRegex_CaseSensitivity_NotConflatedInCache()
+        {
+            var insensitive = new SearchPattern("Abc", isCaseSensitive: false, useRegex: false);
+            var sensitive = new SearchPattern("Abc", isCaseSensitive: true, useRegex: false);
+
+            Assert.IsTrue(insensitive.GetRegex(RegexOptions.Compiled).IsMatch("abc"));
+            Assert.IsFalse(sensitive.GetRegex(RegexOptions.Compiled).IsMatch("abc"));
+        }
     }
 }
