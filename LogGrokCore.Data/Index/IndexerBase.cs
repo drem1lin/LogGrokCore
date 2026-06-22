@@ -78,6 +78,7 @@ public abstract class IndexerBase : IDisposable
     public void Dispose()
     {
         Indices.Clear();
+        _componentKeyCache.Clear();
     }
 
     public void Finish()

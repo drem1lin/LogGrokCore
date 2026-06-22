@@ -52,7 +52,8 @@ namespace LogGrokCore.Data
         public string Rent(int size)
         {
             var pooledStringSize = size < 32 ?  32 : Pow2Roundup(size);
-            var bucket = _buckets.GetOrAdd(pooledStringSize, _bucketFactory(pooledStringSize ));
+            // Lazy factory overload: only construct a bucket on a miss, not on every Rent.
+            var bucket = _buckets.GetOrAdd(pooledStringSize, _bucketFactory);
             return bucket.Rent();
         }
 

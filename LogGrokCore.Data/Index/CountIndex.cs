@@ -59,9 +59,12 @@ namespace LogGrokCore.Data.Index
 
         public void Add(int currentIndex, IDictionary<IndexKeyNum, TIndex> indices)
         {
-            Volatile.Write(ref _lastIndex, currentIndex);
+            // Append the Granularity checkpoint BEFORE publishing _lastIndex: a reader that observes
+            // the new _lastIndex (acquire) then also observes the new checkpoint in _counts, and the
+            // snapshot cache (keyed by _lastIndex) is correctly invalidated across the checkpoint.
             if (currentIndex % Granularity == 0 && currentIndex != 0)
                 UpdateCountsSnapshot();
+            Volatile.Write(ref _lastIndex, currentIndex);
         }
 
         public void Finish(IDictionary<IndexKeyNum, TIndex> indices)
