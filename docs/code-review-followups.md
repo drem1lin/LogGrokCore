@@ -118,7 +118,19 @@ honor `culture`), **Y28** (deleted unused `GlyphRunSurgery`). Build + 152 tests 
 
 ---
 
-### Phase 13 — R1 IndexTree memory-ordering hardening (pending commit)
+### Phase 14 — Y21 CountIndex snapshot caching (pending commit)
+- **Y21 (remaining)** `CountIndex.Counts` rebuilt a full O(keys) per-key snapshot on every read
+  during load. Since `UpdatableValue.Value` calls `Counts` on every dereference (the returned
+  `ImmutableList` reference differs each time, so its reference-equality short-circuit never fired)
+  and `FilteredCountIndicesProvider` dereferences it several times per fetch, this was steady
+  allocation churn. Now the live-tail snapshot is cached and keyed by the last-indexed line number
+  (`_lastIndex`, bumped on every `Add`); it is reused until a new line is indexed (which also covers
+  the Granularity-checkpoint case, since a checkpoint bumps `_lastIndex` too). `_isFinished` made
+  `volatile`. Behaviour unchanged.
+- Tests: +4 `CountIndexTests` (reflects live counts; snapshot reused while idle; rebuilt after a new
+  line; stable after finish). 200 → 204. Smoke-validated on a 2 GB log.
+
+### Phase 13 — R1 IndexTree memory-ordering hardening (committed d4e2d60)
 - **R1** Investigated empirically: the UI read path is index-based (`GetEnumerableFromIndex` via
   `leaf[i]`/`Count`/`Next`), not the `List` version-checked enumerator, and every list in the tree
   has fixed capacity (a full leaf/node spills into a new one), so nothing ever reallocates. Under an
@@ -269,8 +281,8 @@ lock-free design with load benchmarks; do NOT add a naive lock).
   component (`Index/IndexerBase.cs:41-47`).
 - Y20. `LineProvider.Fetch` casts the byte span size to `int` — guard/checked for >2GB or huge
   single lines (`LineProvider.cs:30-38`).
-- Y21. (`IndexTree._count` volatile — DONE in Phase 13.) Remaining: `CountIndex` allocates a fresh
-  snapshot on every `Counts` read before finish (`Index/CountIndex.cs`).
+- Y21. DONE. (`IndexTree._count` volatile in Phase 13; `CountIndex` live snapshot now cached by
+  last-indexed line and reused until a new line is indexed — Phase 14.)
 - Y22. `RegexBasedLineParser.Parse(string)` allocates an `int[]` per call (stackalloc for small
   component counts) — secondary path, hot only if used in a loop.
 - Y23. `StringPool` buckets grow unbounded (slow leak over long sessions with varied line sizes).
