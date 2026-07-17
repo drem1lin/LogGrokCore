@@ -154,7 +154,7 @@ honor `culture`), **Y28** (deleted unused `GlyphRunSurgery`). Build + 152 tests 
 ### Phase 12 — R2 unparseable-line behaviour (committed 813d073)
 - **R2** Investigated empirically (ran the app on crafted logs) and by tracing the offset math.
   Finding: the review premise ("non-conforming lines vanish; offset drift") does NOT hold — nothing
-  is lost. Displayed text is read from the file by offset range, so an unparseable line (e.g. a
+  is lost. Displayed text is read from the file by offset range, so an unparseable line (e.g. alf
   stack-trace continuation) is rendered as part of the preceding record; a leading non-conforming
   line shows as an index-less row; a file with no parseable line at all falls back to the single
   `TEXT` column format. `_bufferOffset` is a reference point that cancels in
