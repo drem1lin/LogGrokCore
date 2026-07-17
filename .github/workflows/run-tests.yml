@@ -7,6 +7,9 @@ on:
   pull_request:
     branches: [ master ]
 
+env:
+  AVALONIA_TELEMETRY_OPTOUT: 1
+
 jobs:
 
   windows_build_and_test:
@@ -37,7 +40,7 @@ jobs:
     - name: Execute unit tests
       run: dotnet test --configuration ${{matrix.configuration}} --no-restore --verbosity normal
 
-  linux_data_build_and_test:
+  linux_build_and_test:
 
     strategy:
       matrix:
@@ -64,3 +67,9 @@ jobs:
 
     - name: Execute data tests
       run: dotnet test LogGrokCore.Data.Tests/LogGrokCore.Data.Tests.csproj --configuration ${{matrix.configuration}} --no-restore --no-build --verbosity normal
+
+    - name: Restore Avalonia shell
+      run: dotnet restore LogGrokCore.Avalonia/LogGrokCore.Avalonia.csproj
+
+    - name: Build Avalonia shell
+      run: dotnet build LogGrokCore.Avalonia/LogGrokCore.Avalonia.csproj --configuration ${{matrix.configuration}} --no-restore

@@ -1,0 +1,61 @@
+<Window x:Class="LogGrokCore.Avalonia.Views.MainWindow"
+        xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:vm="using:LogGrokCore.Avalonia.ViewModels"
+        mc:Ignorable="d"
+        d:DesignWidth="1024"
+        d:DesignHeight="768"
+        x:DataType="vm:MainWindowViewModel"
+        Title="{Binding Title}"
+        Width="1024"
+        Height="768"
+        MinWidth="900"
+        MinHeight="600">
+  <Design.DataContext>
+    <vm:MainWindowViewModel />
+  </Design.DataContext>
+
+  <DockPanel>
+    <Menu DockPanel.Dock="Top">
+      <MenuItem Header="_File">
+        <MenuItem Header="_Open..." IsEnabled="False" />
+        <Separator />
+        <MenuItem Header="E_xit" IsEnabled="False" />
+      </MenuItem>
+      <MenuItem Header="_View">
+        <MenuItem Header="_Marked lines" IsChecked="True" IsEnabled="False" />
+      </MenuItem>
+    </Menu>
+
+    <Grid ColumnDefinitions="*,320">
+      <Border Padding="24" BorderBrush="#33000000" BorderThickness="0,0,1,0">
+        <StackPanel Spacing="16">
+          <TextBlock Text="LogGrokCore"
+                     FontSize="28"
+                     FontWeight="SemiBold" />
+          <TextBlock Text="{Binding StartupStatus}"
+                     TextWrapping="Wrap" />
+          <ItemsControl ItemsSource="{Binding Documents}">
+            <ItemsControl.ItemTemplate>
+              <DataTemplate>
+                <TextBlock Text="{Binding}" />
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+        </StackPanel>
+      </Border>
+
+      <Border Grid.Column="1" Padding="16">
+        <StackPanel Spacing="8">
+          <TextBlock Text="Marked lines"
+                     FontSize="16"
+                     FontWeight="SemiBold" />
+          <TextBlock Text="The first Avalonia pass keeps this pane as a placeholder while the WPF document and virtualized log controls are ported."
+                     TextWrapping="Wrap" />
+        </StackPanel>
+      </Border>
+    </Grid>
+  </DockPanel>
+</Window>
