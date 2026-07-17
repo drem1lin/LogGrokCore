@@ -8,7 +8,7 @@ on:
 
 jobs:
 
-  build_and_test:
+  windows_build_and_test:
 
     strategy:
       matrix:
@@ -35,3 +35,31 @@ jobs:
 
     - name: Execute unit tests
       run: dotnet test --configuration ${{matrix.configuration}} --no-restore --verbosity normal
+
+  linux_data_build_and_test:
+
+    strategy:
+      matrix:
+        configuration: [Debug, Release]
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: Install .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: 10.0.x
+
+    - name: Restore data tests
+      run: dotnet restore LogGrokCore.Data.Tests/LogGrokCore.Data.Tests.csproj
+
+    - name: Build data tests
+      run: dotnet build LogGrokCore.Data.Tests/LogGrokCore.Data.Tests.csproj --configuration ${{matrix.configuration}} --no-restore
+
+    - name: Execute data tests
+      run: dotnet test LogGrokCore.Data.Tests/LogGrokCore.Data.Tests.csproj --configuration ${{matrix.configuration}} --no-restore --no-build --verbosity normal
