@@ -1,16 +1,12 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Diagnostics;
-
 using System.IO;
-
 using System.Linq;
-
 using System.Reflection.Metadata;
-
 using System.Windows;
 using System.Windows.Input;
 using LogGrokCore.AvalonDockExtensions;
@@ -28,20 +24,15 @@ namespace LogGrokCore
         private DocumentViewModel? _currentDocument;
         private readonly ApplicationSettings _applicationSettings;
         private readonly SearchAutocompleteCache _searchAutocompleteCache;
-
         private readonly Dictionary<DocumentViewModel, DocumentContainer> _containers = new();
-
         private bool _isDebugLoggingEnabled;
-
         private ProfileSettings _selectedProfile;
-
         private bool _disposed;
-
 
         public ObservableCollection<DocumentViewModel> Documents { get; }
 
         public MarkedLinesViewModel MarkedLinesViewModel { get; }
-        
+
         public ICommand OpenFileCommand => new DelegateCommand(OpenFile);
 
         public ICommand OnDocumentCloseCommand => DelegateCommand.Create((DocumentViewModel document) =>
@@ -50,28 +41,22 @@ namespace LogGrokCore
         });
 
         public ICommand DropCommand => new DelegateCommand(
-            obj=> OpenFiles((IEnumerable<string>)obj), 
+            obj => OpenFiles((IEnumerable<string>)obj),
             o => o is IEnumerable<string>);
 
-        public MainWindowViewModel(ApplicationSettings applicationSettings, 
-            SearchAutocompleteCache searchAutocompleteCache, 
+        public MainWindowViewModel(ApplicationSettings applicationSettings,
+            SearchAutocompleteCache searchAutocompleteCache,
             Func<ObservableCollection<DocumentViewModel>, MarkedLinesViewModel> markedLinesViewModelFactory)
         {
             _applicationSettings = applicationSettings;
             _searchAutocompleteCache = searchAutocompleteCache;
             Documents = new ObservableCollection<DocumentViewModel>();
             Documents.CollectionChanged += OnDocumentsChanged;
-
             MarkedLinesViewModel = markedLinesViewModelFactory(Documents);
-
             Profiles = new ObservableCollection<ProfileSettings>(_applicationSettings.GetProfiles());
-
             _selectedProfile = ResolveSelectedProfile();
-
             _applicationSettings.ProfilesChanged += OnProfilesChanged;
-
             OpenSettings = new DelegateCommand(() =>
-
             {
                 OpenExternalFile(ApplicationSettings.SettingsFileName);
             });
@@ -125,245 +110,141 @@ namespace LogGrokCore
             set
             {
                 if (_currentDocument == value) return;
-                
+
                 if (_currentDocument != null)
                     _currentDocument.IsCurrentDocument = false;
-                
+
                 _currentDocument = value;
-                
+
                 if (_currentDocument != null)
                     _currentDocument.IsCurrentDocument = true;
-                
+
                 InvokePropertyChanged();
             }
         }
 
         public ICommand OpenSettings { get; }
 
-
         public ObservableCollection<ProfileSettings> Profiles { get; }
 
-
         /// <summary>
-
         /// The active parser/highlight profile. Changing it rebuilds every open document so its
-
         /// parser, indexes and table columns all come from the same profile.
-
         /// </summary>
-
         public ProfileSettings SelectedProfile
-
         {
-
             get => _selectedProfile;
-
             set
-
             {
-
                 if (value == null || string.Equals(_selectedProfile.Name, value.Name,
-
                         StringComparison.OrdinalIgnoreCase))
-
                     return;
 
-
                 if (!TryReplaceDocumentsForProfile(value))
-
                 {
-
                     InvokePropertyChanged();
-
                     return;
-
                 }
 
-
                 _selectedProfile = value;
-
                 InvokePropertyChanged();
-
                 ApplicationSettings.SetSelectedProfile(value.Name);
-
             }
-
         }
 
-
         private ProfileSettings ResolveSelectedProfile()
-
         {
-
             var configured = _applicationSettings.GetSelectedProfile();
-
             foreach (var profile in Profiles)
-
             {
-
                 if (string.Equals(profile.Name, configured.Name, StringComparison.OrdinalIgnoreCase))
-
                     return profile;
-
             }
 
-
             return Profiles[0];
-
         }
 
-
         private void OnProfilesChanged()
-
         {
-
             var dispatcher = Application.Current?.Dispatcher;
-
             if (dispatcher != null && !dispatcher.CheckAccess())
-
             {
-
                 _ = dispatcher.BeginInvoke(OnProfilesChanged);
-
                 return;
-
             }
 
-
             if (_disposed)
-
                 return;
 
-
             var currentName = _selectedProfile.Name;
-
             var refreshedProfiles = _applicationSettings.GetProfiles();
-
             Profiles.Clear();
-
             foreach (var profile in refreshedProfiles)
-
                 Profiles.Add(profile);
 
-
             var refreshedSelection = Profiles.FirstOrDefault(profile =>
-
                                          string.Equals(profile.Name, currentName,
-
                                              StringComparison.OrdinalIgnoreCase));
-
             if (refreshedSelection != null)
-
             {
-
                 _selectedProfile = refreshedSelection;
-
                 InvokePropertyChanged(nameof(SelectedProfile));
-
                 return;
-
             }
 
-
             // The active profile was removed from the file. Apply the configured fallback so the
-
             // combo box and every open table still describe the same parser configuration.
-
             var fallback = ResolveSelectedProfile();
-
             if (TryReplaceDocumentsForProfile(fallback))
-
                 _selectedProfile = fallback;
-
             InvokePropertyChanged(nameof(SelectedProfile));
-
         }
 
-
         private bool TryReplaceDocumentsForProfile(ProfileSettings profile)
-
         {
-
             if (Documents.Count == 0)
-
                 return true;
 
-
             var oldDocuments = Documents.ToArray();
-
             var currentIndex = CurrentDocument == null ? -1 : Array.IndexOf(oldDocuments, CurrentDocument);
-
             var replacements = new List<(DocumentViewModel viewModel, DocumentContainer container)>();
 
-
             try
-
             {
-
                 foreach (var oldDocument in oldDocuments)
-
                 {
-
                     var replacement = CreateDocumentResources(oldDocument.DocumentId, profile);
-
                     foreach (var markedLine in oldDocument.MarkedLines)
-
                         replacement.viewModel.MarkedLines.Add(markedLine);
-
                     replacements.Add(replacement);
-
                 }
-
             }
-
             catch (Exception ex)
-
             {
-
                 foreach (var replacement in replacements)
-
                     replacement.container.Dispose();
 
-
                 Trace.TraceError($"Failed to apply profile '{profile.Name}': {ex}");
-
                 var source = TranslationSource.Instance;
-
                 MessageBox.Show(
-
                     string.Format(source["Profile_ChangeErrorMessage"], profile.Name, ex.Message),
-
                     source["Profile_ChangeErrorTitle"],
-
                     MessageBoxButton.OK,
-
                     MessageBoxImage.Warning);
-
                 return false;
-
             }
 
-
             for (var i = 0; i < replacements.Count; i++)
-
             {
-
                 var replacement = replacements[i];
-
                 _containers[replacement.viewModel] = replacement.container;
-
                 Documents[i] = replacement.viewModel;
-
             }
 
-
             CurrentDocument = currentIndex >= 0 ? replacements[currentIndex].viewModel : null;
-
             return true;
-
         }
 
-
         public ICommand OpenAbout => new DelegateCommand(() =>
         {
             var about = new AboutWindow { Owner = Application.Current.MainWindow };
@@ -457,10 +338,10 @@ namespace LogGrokCore
                     AddDocument(fileName);
                 }
             }
-            
+
             ShowScratchPad?.Invoke(this, new EventArgs());
         }
-        
+
         private void OpenFiles(IEnumerable<string> files)
         {
             foreach (var file in files)
@@ -533,51 +414,29 @@ namespace LogGrokCore
         }
 
         private DocumentViewModel CreateDocument(string fileName)
-
         {
-
             var (viewModel, container) = CreateDocumentResources(fileName, _selectedProfile);
-
             _containers[viewModel] = container;
-
             Documents.Add(viewModel);
-
             return viewModel;
-
         }
-
 
         private (DocumentViewModel viewModel, DocumentContainer container) CreateDocumentResources(
-
             string fileName, ProfileSettings profile)
-
         {
-
             var container = new DocumentContainer(fileName, profile, _applicationSettings,
-
                 _searchAutocompleteCache);
-
             try
-
             {
-
                 return (container.GetDocumentViewModel(), container);
-
             }
-
             catch
-
             {
-
                 container.Dispose();
-
                 throw;
-
             }
-
         }
 
-
         // Dispose a document's container (which disposes its view models and file handle) when the
         // document is removed. Subscribed once, so handlers don't accumulate per opened document.
         private void OnDocumentsChanged(object? sender, NotifyCollectionChangedEventArgs e)
@@ -601,7 +460,7 @@ namespace LogGrokCore
         }
 
         public event EventHandler? ShowScratchPad;
-        
+
         public object? GetContent(string contentId)
         {
             return contentId == Constants.MarkedLinesContentId ? MarkedLinesViewModel : null;
