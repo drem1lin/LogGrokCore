@@ -472,8 +472,12 @@ namespace LogGrokCore
                 return;
             _disposed = true;
             _applicationSettings.ProfilesChanged -= OnProfilesChanged;
-            Documents.Clear();
+            Documents.CollectionChanged -= OnDocumentsChanged;
+            foreach (var container in _containers.Values)
+                container.Dispose();
+            _containers.Clear();
             MarkedLinesViewModel.Dispose();
+            Documents.Clear();
         }
     }
 }
