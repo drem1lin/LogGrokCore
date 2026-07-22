@@ -1,84 +1,119 @@
 Settings:
+  SettingsVersion: 1.3.6
   # UI language: en, ru, de, es, fr, pt-BR, ja, pl
   Language: en
+  SelectedProfile: Kaspersky
 
   DebugSettings:
     # Restart required after changing debug settings
     EnableCrashDumps: false
     MaxDumpsCount: 10
 
-  ColorSettings:
-    # Find list of supported values for Color here https://docs.microsoft.com/ru-ru/dotnet/api/system.drawing.color?view=net-6.0
-    # or use "#AARRGGBB" notation
-    Rules:
-      - RegexString: No error #use default color
+  # Each profile owns an independent set of parsing regexes and highlighting rules.
+  Profiles:
+    - Name: Kaspersky
+      ColorSettings:
+        # Find supported Color values at https://learn.microsoft.com/dotnet/api/system.windows.media.colors
+        # or use "#AARRGGBB" notation.
+        Rules:
+          - RegexString: No error # use default color
 
-      - RegexString: "error: 0x0"
+          - RegexString: "error: 0x0"
 
-      - RegexString: \tERR\t
-        ForegroundColor: Red
+          - RegexString: \tERR\t
+            ForegroundColor: Red
 
-      - RegexString: \Werror\W
-        ForegroundColor: Red
+          - RegexString: \Werror\W
+            ForegroundColor: Red
 
-      - RegexString: \tIMP\t
-        ForegroundColor: DarkRed
+          - RegexString: \tIMP\t
+            ForegroundColor: DarkRed
 
-      - RegexString: \tWRN\t
-        ForegroundColor: Chocolate
+          - RegexString: \tWRN\t
+            ForegroundColor: Chocolate
 
-      - RegexString: \tDBG\t
-        ForegroundColor: Gray
+          - RegexString: \tDBG\t
+            ForegroundColor: Gray
 
-      - RegexString: (?i)fatal
-        BackgroundColor: "#FFCD5C5C"
+          - RegexString: (?i)fatal
+            BackgroundColor: "#FFCD5C5C"
+      LogFormats:
+        - Regex: ^(?<Time>\d{4}-\d{2}-\d{2}\s[^\s]+)\s+(?<Level>[^\s]+)\s+(?<Thread>[^\s]+)\s+(?<Component>[^\s]+)\s+(?<Message>.*)
+          IndexedFields:
+            - Level
+            - Thread
+            - Component
+        # KL logs
+        - Regex: ^(?'Time'\d{2}\:\d{2}\:\d{2}\.\d{3})\t(?'Thread'0x[0-9a-fA-F]+)\t(?'Severity'\w+)\t(?:(?'Component'[^\t]+)?\t)?(?'Message'.*)
+          IndexedFields:
+            - Thread
+            - Severity
+            - Component
+          Transformations:
+            - lic\t\[.*ContentImp.*\].*"TicketBody"\s+:\s+\{[^}]+"Data"\s+:\s+(?'Base64Decode'"[^"]+")
+        # xor-ed KL logs
+        - Regex: ^(?'Time'\d{2}\:\d{2}\:\d{2}\.\d{3})\t(?'Thread'0x[0-9a-fA-F]+)\t(?'Severity'\w+)\t(?:(?'Component'[^\t]+)?\t)?(?'Message'.*)
+          IndexedFields:
+            - Thread
+            - Severity
+            - Component
+          XorMask: 0xef
+          Transformations:
+            - lic\t\[ContentImp\.cpp.*\].*"TicketBody".*"(?'Base64DecodeFormatJson'[\w]+==)"
+        # infoscan logs (единый KL-совместимый формат, без xor/transformations)
+        # 14:03:21.703	0x401	INFO	FileScan	BEGIN scan id=1 prio=996: C:\f.exe (Infoscan.cpp:655)
+        - Regex: ^(?'Time'\d{2}\:\d{2}\:\d{2}\.\d{3})\t(?'Thread'0x[0-9a-fA-F]+)\t(?'Severity'\w+)\t(?:(?'Component'[^\t]+)?\t)?(?'Message'.*)
+          IndexedFields:
+            - Thread
+            - Severity
+            - Component
+        # LogGrok logs
+        # 00:07:08.703	10144	0x1	INF	DocumentContainer	Start loading a log file
+        - Regex: ^(?'Time'\d{2}\:\d{2}\:\d{2}\.\d{3})\t(?'Thread'0x[0-9a-fA-F]+)\t(?'Severity'\w+)\t(?'Component'[^\t]+\t)?(?'Message'.*)
+          IndexedFields:
+            - Process
+            - Thread
+            - Severity
+            - Component
+        # TestRun logs
+        - Regex: ^(?'time'\d{2}\:\d{2}\:\d{2}\.\d{3})\t(?'process_thread'\[\d+-\d+\])\t(?'severity'\w+)?\t(?:[\w|\d]+\.)*(?'component'[^-\s]+)\t(?'message'.*)
+          IndexedFields:
+            - process_thread
+            - severity
+            - component
+    - Name: Venn
+      ColorSettings:
+        Rules:
+          - RegexString: No error # use default color
+          - RegexString: "error: 0x0"
+
+          - RegexString: \[CRIT\]
+            BackgroundColor: "#FFCD5C5C"
+          - RegexString: \[ERRO\]
+            ForegroundColor: Red
+          - RegexString: \[WARN\]
+            ForegroundColor: Chocolate
+          - RegexString: \[TRAC\]
+            ForegroundColor: Gray
+      LogFormats:
+        # VENN Workplace (hook / driver / service / activity) — unified, PID/TID extracted
+        - Regex: ^(?<Time>\d{4}-\d{2}-\d{2}\s\d{1,2}:\d{2}:\d{2}\.\d{3})\s-\s\[(?<Level>[A-Z]+)\]\s-\s\[(?<Context>(?:(?<Sid>\d+):)?(?<Pid>\d+):(?<Tid>\d+)(?::[MU-]:[MU-])?|[^\]]*)\](?:\s-\s\[(?<Process>[^\]]*)\]\s-\s\[irql\s(?<Irql>\d+)\](?:\s-\s\[(?<Source>[^\]]*)\])?|\s-\s\[(?<Process>[^\]]*)\]\s-\s\[(?<Source>[^\]]*)\]|\s-\s\[(?<Source>[^\]]*)\])?\s-\s(?<Message>.*)
+          IndexedFields:
+            - Level
+            - Sid
+            - Pid
+            - Tid
+            - Process
+            - Source
+            - Irql
+    - Name: Plain text
+      InheritLegacySettings: false
+      ColorSettings:
+        Rules: []
+      LogFormats:
+        - Regex: ^(?'Text'.*)
 
   ViewSettings:
     # BigLine: prune|break
     BigLine: prune
     BigLineSize: 4096
-  LogFormats:
-    - Regex: ^(?<Time>\d{4}-\d{2}-\d{2}\s[^\s]+)\s+(?<Level>[^\s]+)\s+(?<Thread>[^\s]+)\s+(?<Component>[^\s]+)\s+(?<Message>.*)
-      IndexedFields:
-        - Level
-        - Thread
-        - Component
-    # KL logs
-    - Regex: ^(?'Time'\d{2}\:\d{2}\:\d{2}\.\d{3})\t(?'Thread'0x[0-9a-fA-F]+)\t(?'Severity'\w+)\t(?:(?'Component'[^\t]+)?\t)?(?'Message'.*)
-      IndexedFields:
-        - Thread
-        - Severity
-        - Component
-      Transformations:
-        - lic\t\[.*ContentImp.*\].*"TicketBody"\s+:\s+\{[^}]+"Data"\s+:\s+(?'Base64Decode'"[^"]+")
-    # xor-ed KL logs
-    - Regex: ^(?'Time'\d{2}\:\d{2}\:\d{2}\.\d{3})\t(?'Thread'0x[0-9a-fA-F]+)\t(?'Severity'\w+)\t(?:(?'Component'[^\t]+)?\t)?(?'Message'.*)
-      IndexedFields:
-        - Thread
-        - Severity
-        - Component
-      XorMask : 0xef
-      Transformations:
-        - lic\t\[ContentImp\.cpp.*\].*"TicketBody".*"(?'Base64DecodeFormatJson'[\w]+==)"
-    # infoscan logs (единый KL-совместимый формат, без xor/transformations)
-    # 14:03:21.703	0x401	INFO	FileScan	BEGIN scan id=1 prio=996: C:\f.exe (Infoscan.cpp:655)
-    - Regex: ^(?'Time'\d{2}\:\d{2}\:\d{2}\.\d{3})\t(?'Thread'0x[0-9a-fA-F]+)\t(?'Severity'\w+)\t(?:(?'Component'[^\t]+)?\t)?(?'Message'.*)
-      IndexedFields:
-        - Thread
-        - Severity
-        - Component
-    # LogGrok logs
-    # 00:07:08.703	10144	0x1	INF	DocumentContainer	Start loading C:\Traces\producttraces (65)\KAV.21.3.7.290_01.26_15.43_4824.SRV.log
-    - Regex: ^(?'Time'\d{2}\:\d{2}\:\d{2}\.\d{3})\t(?'Thread'0x[0-9a-fA-F]+)\t(?'Severity'\w+)\t(?'Component'[^\t]+\t)?(?'Message'.*)
-      IndexedFields:
-        - Process
-        - Thread
-        - Severity
-        - Component
-    # TestRun logs
-    # 18:14:53.667	[4720-16]	INF	KL.KsnMock.Client.Responses.KsnResponseRegistrator`1+<>c__DisplayClass5_0	"[df42b713] Receive packet for GrpcKsnMock.Ksn_Protocol_FileReputation_ObjectRequest, body: { ""Requests"": [ { ""HashType"": 1, ""ServiceMask"": ""23"", ""FileHash"": ""ooWVtba5z5Yjgv/snVQq+g=="" } ] }"	
-    - Regex: ^(?'time'\d{2}\:\d{2}\:\d{2}\.\d{3})\t(?'process_thread'\[\d+-\d+\])\t(?'severity'\w+)?\t(?:[\w|\d]+\.)*(?'component'[^-\s]+)\t(?'message'.*)
-      IndexedFields:
-        - process_thread
-        - severity
-        - component

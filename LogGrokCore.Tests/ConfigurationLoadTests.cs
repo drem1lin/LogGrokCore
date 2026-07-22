@@ -70,6 +70,106 @@ namespace LogGrokCore.Tests
         }
 
         [TestMethod]
+        public void BuildFromFile_ProfilesBindIndependentFormatsAndColors()
+        {
+            var path = WriteFile(
+                "Settings:\n" +
+                "  SelectedProfile: Json\n" +
+                "  Profiles:\n" +
+                "    - Name: Classic\n" +
+                "      ColorSettings:\n" +
+                "        Rules:\n" +
+                "          - RegexString: ERROR\n" +
+                "            ForegroundColor: Red\n" +
+                "      LogFormats:\n" +
+                "        - Regex: ^(?<Classic>.*)\n" +
+                "    - Name: Json\n" +
+                "      ColorSettings:\n" +
+                "        Rules:\n" +
+                "          - RegexString: warning\n" +
+                "            ForegroundColor: Orange\n" +
+                "      LogFormats:\n" +
+                "        - Regex: ^(?<Json>.*)\n");
+
+            var settings = ApplicationSettings.BuildFromFile(path, error => Assert.Fail(error.ToString()), out _);
+            var profiles = settings.GetProfiles();
+
+            Assert.AreEqual(2, profiles.Count);
+            Assert.AreEqual("Classic", profiles[0].Name);
+            Assert.AreEqual("ERROR", profiles[0].ColorSettings!.Rules[0].RegexString);
+            Assert.AreEqual("Classic", profiles[0].LogFormats![0].FieldNames[0]);
+            Assert.AreEqual("Json", settings.GetSelectedProfile().Name);
+            Assert.AreEqual("warning", settings.GetSelectedProfile().ColorSettings!.Rules[0].RegexString);
+        }
+
+        [TestMethod]
+        public void GetProfiles_LegacySettingsBecomeDefaultProfile()
+        {
+            var path = WriteFile(
+                "Settings:\n" +
+                "  ColorSettings:\n" +
+                "    Rules:\n" +
+                "      - RegexString: legacy-color\n" +
+                "  LogFormats:\n" +
+                "    - Regex: ^(?<Legacy>.*)\n");
+
+            var settings = ApplicationSettings.BuildFromFile(path, error => Assert.Fail(error.ToString()), out _);
+            var profile = settings.GetSelectedProfile();
+
+            Assert.AreEqual(ApplicationSettings.LegacyProfileName, profile.Name);
+            Assert.AreEqual("legacy-color", profile.ColorSettings!.Rules[0].RegexString);
+            Assert.AreEqual("Legacy", profile.LogFormats![0].FieldNames[0]);
+        }
+
+        [TestMethod]
+        public void GetProfiles_ProfileMayInheritLegacySections()
+        {
+            var path = WriteFile(
+                "Settings:\n" +
+                "  ColorSettings:\n" +
+                "    Rules:\n" +
+                "      - RegexString: shared-color\n" +
+                "  LogFormats:\n" +
+                "    - Regex: ^(?<Shared>.*)\n" +
+                "  Profiles:\n" +
+                "    - Name: Default\n");
+
+            var settings = ApplicationSettings.BuildFromFile(path, error => Assert.Fail(error.ToString()), out _);
+            var profile = settings.GetSelectedProfile();
+
+            Assert.AreEqual("shared-color", profile.ColorSettings!.Rules[0].RegexString);
+            Assert.AreEqual("Shared", profile.LogFormats![0].FieldNames[0]);
+        }
+
+        [TestMethod]
+        public void DefaultTemplate_ContainsKasperskyVennAndPlainTextProfiles()
+        {
+            var path = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory,
+                "..", "..", "..", "..", "LogGrokCore", "appsettings.default.yaml"));
+
+            var settings = ApplicationSettings.BuildFromFile(path,
+                error => Assert.Fail(error.ToString()), out _);
+            var profiles = settings.GetProfiles();
+
+            Assert.AreEqual(ApplicationSettings.CurrentSettingsVersion, settings.SettingsVersion);
+            Assert.AreEqual(3, profiles.Count);
+            Assert.AreEqual("Kaspersky", settings.GetSelectedProfile().Name);
+            Assert.AreEqual(8, profiles[0].ColorSettings!.Rules.Length);
+            Assert.AreEqual(6, profiles[0].LogFormats!.Length);
+            Assert.AreEqual("Venn", profiles[1].Name);
+            CollectionAssert.AreEqual(
+                new[] { "Time", "Level", "Context", "Sid", "Pid", "Tid", "Process", "Irql", "Source", "Message" },
+                profiles[1].LogFormats![0].FieldNames);
+            CollectionAssert.AreEqual(
+                new[] { "Level", "Sid", "Pid", "Tid", "Process", "Source", "Irql" },
+                profiles[1].LogFormats[0].IndexedFields);
+            Assert.AreEqual(6, profiles[1].ColorSettings!.Rules.Length);
+            Assert.AreEqual("Plain text", profiles[2].Name);
+            CollectionAssert.AreEqual(new[] { "Text" }, profiles[2].LogFormats![0].FieldNames);
+            Assert.AreEqual(0, profiles[2].ColorSettings!.Rules.Length);
+        }
+
+        [TestMethod]
         public void BuildFromFile_MissingFile_NoError_UsesDefaults()
         {
             var path = Path.Combine(_tempDir, "does-not-exist.yaml");

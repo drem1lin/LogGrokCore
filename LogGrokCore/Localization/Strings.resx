@@ -62,6 +62,11 @@
   <data name="Menu_DebugLogging" xml:space="preserve"><value>Debug logging &amp; crash dumps</value></data>
   <data name="Menu_Exit" xml:space="preserve"><value>Exit</value></data>
   <data name="Menu_Settings" xml:space="preserve"><value>settings</value></data>
+  <data name="Profile_ToolTip" xml:space="preserve"><value>Parsing and highlighting profile</value></data>
+  <data name="Profile_ChangeErrorTitle" xml:space="preserve"><value>Cannot change profile</value></data>
+  <data name="Profile_ChangeErrorMessage" xml:space="preserve"><value>Could not apply profile "{0}".
+
+{1}</value></data>
   <data name="Menu_Language" xml:space="preserve"><value>Language</value></data>
   <data name="Doc_CopyFilename" xml:space="preserve"><value>Copy Filename</value></data>
   <data name="Doc_CopyFullPath" xml:space="preserve"><value>Copy Full Path</value></data>
