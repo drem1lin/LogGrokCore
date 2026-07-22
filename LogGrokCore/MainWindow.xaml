@@ -105,6 +105,14 @@
     </mahapps:MetroWindow.LeftWindowCommands>
     <mahapps:MetroWindow.RightWindowCommands>
         <mahapps:WindowCommands>
+            <ComboBox Width="150"
+                      Margin="4 0"
+                      VerticalContentAlignment="Center"
+                      DisplayMemberPath="Name"
+                      IsTextSearchEnabled="True"
+                      ItemsSource="{Binding Profiles}"
+                      SelectedItem="{Binding SelectedProfile, Mode=TwoWay}"
+                      ToolTip="{loc:Loc Profile_ToolTip}" />
             <Button Command="{Binding OpenAbout}" ToolTip="{loc:Loc Menu_About}">
                 <iconPacks:PackIconMaterial Kind="HelpCircleOutline"
                                             Width="18"
